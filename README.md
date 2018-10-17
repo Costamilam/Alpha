@@ -1,14 +1,14 @@
-# PHP-Framework
+# Alpha
 
-PHP Framework for routing, control, database access, auth and more
+Alpha, the simple PHP framework for routing, control, database access, auth and more
 
-**Site**: [https://costamilam.github.io/PHP-Framework/](https://costamilam.github.io/PHP-Framework/)
+**Site**: [https://costamilam.github.io/Alpha/](https://costamilam.github.io/Alpha/)
 
-**Repository**: [https://github.com/Costamilam/PHP-Framework](https://github.com/Costamilam/PHP-Framework)
+**Repository**: [https://github.com/Costamilam/Alpha](https://github.com/Costamilam/Alpha)
 
 **Packagist**: [https://packagist.org/packages/costamilam/simple-framework](https://packagist.org/packages/costamilam/simple-framework)
 
-**License**: [BSD 3-Clause](https://github.com/Costamilam/PHP-Framework/blob/master/LICENSE)
+**License**: [BSD 3-Clause](https://github.com/Costamilam/Alpha/blob/master/LICENSE)
 
 ## Requisits
 
@@ -20,7 +20,7 @@ PHP Framework for routing, control, database access, auth and more
 With [Composer](https://getcomposer.org/):
 
 ```
-composer require costamilam/simple-framework:dev-master
+composer require costamilam/alpha:dev-master
 ```
 
 ## Features

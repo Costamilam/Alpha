@@ -1,9 +1,9 @@
 <?php
 
-namespace Costamilam\SF;
+namespace Costamilam\Alpha;
 
-use Costamilam\SF\Request;
-use Costamilam\SF\Response;
+use Costamilam\Alpha\Request;
+use Costamilam\Alpha\Response;
 
 class App
 {

@@ -1,5 +1,5 @@
 <?php
-namespace Costamilam\SF;
+namespace Costamilam\Alpha;
 
 class DB
 {

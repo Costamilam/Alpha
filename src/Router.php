@@ -1,8 +1,8 @@
 <?php
 
-namespace Costamilam\SF;
+namespace Costamilam\Alpha;
 
-use Costamilam\SF\Request;
+use Costamilam\Alpha\Request;
 
 class Router
 {

@@ -1,9 +1,9 @@
 <?php
 
-namespace Costamilam\SF;
+namespace Costamilam\Alpha;
 
-use Costamilam\SF\App;
-use Costamilam\SF\Response;
+use Costamilam\Alpha\App;
+use Costamilam\Alpha\Response;
 
 use Lcobucci\JWT\Builder;
 use Lcobucci\JWT\Signer;

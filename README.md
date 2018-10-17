@@ -272,7 +272,7 @@ use Costamilam\Alpha\Validator;
 //Validate if is empty
 Filter::isEmpty("", 0, 0.0, false, array("")); //Return false
 
-//Validate string/int/float using an existing function
+//Validate using an existing function
 Filter::validateString("<p>Foo</p>", $error, true, 1, 100, false, "Bar");
 ```
 
@@ -321,7 +321,7 @@ $filter = Filter::group(array(
 //Value of $filter:
 //[
 //	  0 => "My String",
-//    "MyAlias" => "FOO BAR"
+//	  "MyAlias" => "FOO BAR"
 //]
 //Value of $error:
 //[
@@ -342,7 +342,7 @@ Default error messages
 
 | Name | Message |
 |-|-|
-| `minimumValue` | Minimum value overflow |
+| `minimumValue` | Insufficient minimum value |
 | `maximumValue` | Maximum value overflow |
 | `notNullable` | Value is not nullable |
 | `invalidBoolean` | Invalid boolean |

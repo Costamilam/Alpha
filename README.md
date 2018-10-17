@@ -6,7 +6,7 @@ Alpha, the simple PHP framework for routing, control, database access, auth and 
 
 **Repository**: [https://github.com/Costamilam/Alpha](https://github.com/Costamilam/Alpha)
 
-**Packagist**: [https://packagist.org/packages/costamilam/simple-framework](https://packagist.org/packages/costamilam/simple-framework)
+**Packagist**: [https://packagist.org/packages/costamilam/alpha](https://packagist.org/packages/costamilam/alpha)
 
 **License**: [BSD 3-Clause](https://github.com/Costamilam/Alpha/blob/master/LICENSE)
 
@@ -32,7 +32,7 @@ composer require costamilam/alpha:dev-master
 require_once "./vendor/autoload.php";
 
 //Import the App class
-use Costamilam\App;
+use Costamilam\Alpha\App;
 
 //Start aplication
 App::start();
@@ -45,9 +45,9 @@ App::finish();
 
 ```php
 //Import the necessary classes
-use Costamilam\Router;
-use Costamilam\Request;
-use Costamilam\Response;
+use Costamilam\Alpha\Router;
+use Costamilam\Alpha\Request;
+use Costamilam\Alpha\Response;
 
 //Define default RegExp for all parameters "bar"
 Router::addParamRegExp("bar", "[0-9]*");
@@ -267,7 +267,7 @@ Response::redirect("GET", "/foo/bar/");
 
 ```php
 //Import the necessary classes
-use Costamilam\Validator;
+use Costamilam\Alpha\Validator;
 
 //Validate if is empty
 Filter::isEmpty("", 0, 0.0, false, array("")); //Return false
@@ -353,8 +353,8 @@ Default error messages
 
 ```php
 //Import the necessary classes
-use Costamilam\DB;
-use Costamilam\Router;
+use Costamilam\Alpha\DB;
+use Costamilam\Alpha\Router;
 
 //Access to the database
 //Note: the connection it isn't now
@@ -396,8 +396,8 @@ DB::select("INSERT FROM foobar(foo, file) VALUES(?, ?)", $foo, $file);
 
 ```php
 //Import the necessary classes
-use Costamilam\Auth;
-use Costamilam\Token;
+use Costamilam\Alpha\Auth;
+use Costamilam\Alpha\Token;
 
 //For send by HTTP header
 Auth::enableHTTPHeaderMode();

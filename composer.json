@@ -1,6 +1,6 @@
 {
     "name": "costamilam/alpha",
-    "description": "A simple PHP Framework for routing, control, database access, auth and more",
+    "description": "The simple PHP Framework for routing, control, database access, auth and more",
     "type": "library",
     "authors": [
         {
@@ -10,7 +10,8 @@
     ],
     "keywords": [
         "PHP",
-        "PHP-Framework"
+        "PHP-Framework",
+        "Alpha"
     ],
     "license": [
         "BSD-3-Clause"

@@ -1,6 +1,6 @@
 # Alpha
 
-Alpha, the simple PHP framework for routing, control, database access, auth and more
+The simple PHP framework for routing, control, database access, auth and more
 
 **Site**: [https://costamilam.github.io/Alpha/](https://costamilam.github.io/Alpha/)
 

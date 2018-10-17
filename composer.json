@@ -1,0 +1,38 @@
+{
+    "name": "costamilam/simple-framework",
+    "description": "A simple PHP Framework for routing, control, database access, auth and more",
+    "type": "library",
+    "authors": [
+        {
+            "name": "Guilherme Costamilam",
+            "email": "costamilam073@gmail.com"
+        }
+    ],
+    "keywords": [
+        "PHP",
+        "PHP-Framework"
+    ],
+    "license": [
+        "BSD-3-Clause"
+    ],
+    "require": {
+        "php": ">=5.6",
+        "lcobucci/jwt": "^3.2"
+    },
+    "require-dev": {
+        "php": ">=5.6",
+        "lcobucci/jwt": "^3.2"
+    },
+    "autoload": {
+        "psr-4": {
+            "Costamilam\\SF\\": "src/"
+        }
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "Costamilam\\SF\\": "src/"
+        }
+    },
+    "minimum-stability": "dev",
+    "prefer-stable": true
+}

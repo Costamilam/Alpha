@@ -29,7 +29,7 @@ class App
 
         Request::load();
 
-        Response::configureCookie(time() + 60 * 30, "HTTP_HOST", false, true);
+        Response::configureCookie(30, "", false, true);
     }
 
     public function __destruct()

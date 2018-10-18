@@ -11,6 +11,16 @@ class Auth extends Token
     private static $httpHeader = false;
     private static $cookie = false;
 
+    public static function configureToken($algorithm, $key, $issuer, $audience, $expireInMinutes)
+    {
+        parent::configure($algorithm, $key, $issuer, $audience, $expireInMinutes);
+    }
+
+    public static function onStatus($status, $callback)
+    {
+        parent::onStatus($status, $callback);
+    }
+
     public static function enableCookieMode()
     {
         self::$httpHeader = false;
@@ -26,23 +36,25 @@ class Auth extends Token
     public static function route($method, $route, $callback = null)
     {
         if ((strtoupper($method) === "ANY" || strtoupper($method) === Request::method()) && preg_match("/^".str_replace("/", "\/", $route)."$/", Request::path())) {
+            $token = null;
+
             if (self::$cookie) {
                 $auth = Request::cookie("Token");
 
-                parent::verify($auth, $callback);
-            }
-
-            if (self::$httpHeader) {
+                $token = $auth;
+            } elseif (self::$httpHeader) {
                 $auth = Request::header("Authorization");
 
                 if ($auth !== null) {
-                    preg_match("/(.*): (.*)/", $auth, $auth);
+                    preg_match("/(.*) (.*)/", $auth, $auth);
 
                     if (isset($auth[1]) && strtolower($auth[1]) === "bearer" && isset($auth[2])) {
-                        parent::verify($auth[2], $callback);
+                        $token = $auth[2];
                     }
                 }
             }
+
+            parent::verify($token, $callback);
         }
     }
 
@@ -56,22 +68,35 @@ class Auth extends Token
 
         if (self::$cookie) {
             Response::cookie("Token", $token->__toString(), parent::$expire);
-        }
-
-        if (self::$httpHeader) {        
+        } elseif (self::$httpHeader) {        
             Response::header("Token", $token);
         }
 
         return $token;
     }
 
+    private static function getToken()
+    {
+        if (self::$cookie) {
+            return Request::cookie("Token");
+        } elseif (self::$httpHeader) {
+            $auth = Request::header("Authorization");
+
+            if ($auth !== null) {
+                preg_match("/(.*) (.*)/", $auth, $auth);
+
+                $auth = isset($auth[2]) ? $auth[2] : null;
+            }
+
+            return $auth;
+        }
+    }
+
     private static function removeToken()
     {
         if (self::$cookie) {
             Response::cookie("Token", "", 0);
-        }
-
-        if (self::$httpHeader) {
+        } elseif (self::$httpHeader) {
             Response::header("Token");
         }
     }

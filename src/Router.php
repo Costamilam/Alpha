@@ -97,7 +97,6 @@ class Router
             "method" => $method,
             "route" => $route,
             "callback" => $callback,
-            "pathMatchFull" => isset($option["pathMatchFull"]) ? $option["pathMatchFull"] : true,
             "param" => isset($option["param"]) ? $option["param"] : array()
         );
 
@@ -134,7 +133,7 @@ class Router
         }
 
         $routeAux = str_replace("/", "\/", $routeAux);
-        $routeAux = "/^{$routeAux}".($route["pathMatchFull"] ? "" : ".*")."$/";
+        $routeAux = "/^{$routeAux}$/";
 
         if(
             !in_array(Request::method(), $route["method"])

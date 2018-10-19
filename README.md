@@ -47,75 +47,100 @@ App::finish();
 //Import the necessary classes
 use Costamilam\Alpha\Router;
 use Costamilam\Alpha\Request;
-use Costamilam\Alpha\Response;
 
-//Define default RegExp for all parameters "bar"
+//Define default RegExp for all parameters 'bar'
 Router::addParamRegExp("bar", "[0-9]*");
 
-//Define method, route and callback
-Router::get("/my/route/", function () {
+//Create a route by defining the method, route, and callback
+Router::set("GET", "/my/route/", function () {
+	//...
+})
+
+//Define more than one method
+Router::set(array("GET", "POST"), "/my/route/", function () {
 	//...
 })
 ```
 
 | Method | Function | Description |
-|--|--|--|
+|-|-|-|
 | All | `Router::any` | Any HTTP method |
 | GET | `Router::get` | GET HTTP method |
 | POST | `Router::post` | POST HTTP method |
 | PUT | `Router::put` | PUT HTTP method |
 | DELETE | `Router::delete` | DELETE HTTP method |
 | PATCH | `Router::patch` | PATCH HTTP method |
-| SET | `Router::set` | Define one or more HTTP method |
+| Enumeration | `Router::set` | Define one or more HTTP method |
 
 ```php
-//Using parameters with "{}"
+//Using parameters with '{}'
 Router::get("/{foo}/", function () {
-	//...
+	//Get parameters
+	$listOfParams = Request::param();
 }, array(
-	//Optionally, define the RegExp to param, if you don't use, the default is "[^\/]+"
+	//Optionally, define the RegExp to param, if you don't use, the default is '[^\/]+'
 	"param" => array(
 		"foo" => "[a-z]+",
-		"bar" => "[0-9]?" //Disconsidered, because there is no parameter "bar"
+		"bar" => "[0-9]?" //Disconsidered, because there is no parameter 'bar'
 	)
 ));
 
-//Optionally, execute similar routes, for request "/foo/bar/"
-Router::get("/foo/", function () {
-	//It's executed
-}, array(
-	"pathMatchFull" => false
-));
-Router::get("/foo/bar/", function () {
-	//It's executed
+//Set optional param with '?'
+Router::get("/{foo}/{bar}?/", function () {
+	Request::param();
+	//If request is '/theFOO/'
+	//[
+	//	  'foo' => 'theFOO',
+	//	  'bar' => null
+	//]
 });
 
-//Middleware, the function return passes with the next function parameter
+//You can pass regexp in the route, but it is not a parameter
+Router::get("/{foo}/[0-9]+/", function () {
+	Request::param();
+	//[
+	//	  'foo' => 'The value of {foo}'
+	//]
+});
+
+//Optionally, execute similar routes by adding '.*' at the end of the route, for request '/foo/bar/'
+Router::get("/foo/.*", function () {
+	//It is executed
+});
+Router::get("/foo/bar/", function () {
+	//But it is not executed
+});
+
+//Middleware, you can return array in function, this is passed as argument in the next function
 Router::get("/foo/", function () {
 	//...
 	return array("bar", "baz");
 });
-Router::get("/foo/", function ($bar, $baz) {
-	//$bar === "bar";
-	//$baz === "baz";
+Router::get("/foo/bar/", function ($bar, $baz) {
+	//$bar === 'bar';
+	//$baz === 'baz';
 });
 
-//If return is false, the execution is finished
-Router::get("/foo/", function () {
-	//It's executed
+//If return is true, the execution continue to next route
+Router::get("/foo/bar/", function () {
+	//It is executed
 
-	return false;
+	return true;
 });
-Router::get("/foo/", function () {
-	//It's not executed
+Router::get("/foo/{bar}/", function () {
+	//It is executed
 });
+```
 
-//To use an external function, pass namespace, the type (-> or ::, instance or static) and the function name as string
+> If the returned function is not an array and is different from 'true', execution is terminated and the next route is not executed
+
+```php
+//To use an external function, pass namespace, the type ('->' for instance or '::' for static) and the function name as string
 Router::get("/foo/", "Namespace\To\Foo::getStaticFoo");
 Router::get("/foo/", "Namespace\To\Foo->getInstanceFoo");
 Router::get("/foo/", "Namespace\To\Foo->getInstanceBar");
 
-//In /Namespace/To/Foo.php ...
+//In '/Namespace/To/Foo.php' ...
 namespace Namespace\To;
 
 class Foo {
@@ -146,7 +171,7 @@ Router::addInstance("Namespace\To\Foo", new Foo("foo"));
 //Or using aliases
 Router::addInstance("AliasFoo", new Foo("foo"));
 
-//In /Namespace/To/Foo.php ...
+//In '/Namespace/To/Foo.php' ...
 namespace Namespace\To;
 
 class Foo {
@@ -170,8 +195,11 @@ Router::any("/foobar", "AliasFoo->printFoo");
 **Request:**
 
 ```php
+//Import the necessary classes
+use Costamilam\Alpha\Request;
+
 //Get the request HTTP method
-Request::method(); //Example: "GET", "POST", "DELETE", ...
+Request::method(); //Example: 'GET', 'POST', 'DELETE', ...
 
 //Get the request header
 Request::header("foobar");
@@ -181,28 +209,42 @@ Request::header("foobar");
 
 ```php
 //Get the request path
-Request::path(); //Example: "/", "/foo/", "/foo/123"
+Request::path(); //Example: '/', '/foo/', '/foo/123'
 
 //Get the request parameters
 Request::param();
-//Example for route "/foo/{bar}/baz/{baz}/" and request "/foo/Bar/baz/true/":
+//Example for route '/foo/{bar}/baz/{baz}/' and request '/foo/Bar/baz/true/':
 //[
-//	  "foo" => "Bar",
-//	  "baz" => "true"
+//	  'foo' => 'Bar',
+//	  'baz' => 'true'
 //]
+
+//Get fields specific to the request parameters, if the key does not exist, create it with null value
+Request::param("baz", "bar", "qux");
 
 //Get the request body
 Request::body();
 //Example:
 //[
-//	  "foo" => "Bar",
-//	  "baz" => "true"
+//	  'bar' => 'Bar',
+//	  'baz' => 'true'
+//]
+
+//Get fields specific to the request body, if the key does not exist, create it with null value
+Request::body("foo" "bar");
+//Example:
+//[
+//	  'foo' => null,
+//	  'baz' => 'true'
 //]
 ```
 
 **Response:**
 
 ```php
+//Import the necessary classes
+use Costamilam\Alpha\Response;
+
 //Change response status
 Response::status(404);
 
@@ -229,23 +271,27 @@ Response::json(array(
 	"baz" => array(true, false, null, "")
 ));
 
-//Pass "0" or "false" to no cache and an integer in minutes to cache control
+//Pass '0' or 'false' to no cache and an integer in minutes to cache control
 Response::cache(15);
 
 //Default cookie options:
 //expire = time() + 60 * 30 (30 minutes)
-//domain = "HTTP_HOST"
+//domain = ''
 //secure = false
 //httponly = true
 
 //Change default cookie options
 Response::configureCookie(
-	24 * 60, //Time to expire in minutes (24 hours)
-	"HTTP_HOST", //If present, use Host request header else use empty string ("")
-	true, //Only HTTPS (recommended true)
-	true //Access only http, disable access by JavaScript (recommended true)
+	24 * 60, 		//Time to expire in minutes (24 hours)
+	"HTTP_HOST", 	//If present, use Host request header else use empty string ('')
+	true, 			//Only HTTPS (recommended true)
+	true 			//Access only http, disable access by JavaScript (recommended true)
 );
+```
 
+> Attention: If you set the domain to "HTTP_HOST" and access with a local server passing the port, for example 'localhost:8000', the cookie will not work. In this case, you need to set the domain to 'localhost' without the port
+
+```php
 //Send a cookie
 Response::cookie("foo", "bar");
 
@@ -257,34 +303,35 @@ Future implementation:
 
 ```php
 //Response with file, pass path to file, name and last parameter determines if force download (not implemented)
-Response::file("path/to/$file", "Name File", true);
+Response::file("path/to/file.txt", "Name File", true);
 
 //Redirect to another route (not implemented)
 Response::redirect("GET", "/foo/bar/");
 ```
 
-**Validator:**
+**Filter, sanitize and validator:**
 
 ```php
 //Import the necessary classes
-use Costamilam\Alpha\Validator;
+use Costamilam\Alpha\Filter;
 
 //Validate if is empty
-Filter::isEmpty("", 0, 0.0, false, array("")); //Return false
+Filter::isEmpty("", 0, 0.0, false, array(""));
+//Returns true if one or more arguments are null, empty string or empty array. 0 and false is considered a valid value
 
 //Validate using an existing function
 Filter::validateString("<p>Foo</p>", $error, true, 1, 100, false, "Bar");
 ```
 
-| Parameter | Type | Is required? | Description | Exist in `Filter::filterString`? | Exist in `Filter::filterInt`? | Exist in `Filter::filterFloat`? | Exist in `Filter::filterBoolean`? | Exist in `Filter::filterDatetime`? |
-|-|-|-|-|-|-|-|-|-|
-| 1 | Any | true | Value to filter | true | true | true | true | true |
-| 2 | Any | true | Error list, passing by reference | true | true | true | true | true |
-| 3 | Boolean | false | Sanitize value | true | true | true | false | true |
-| 4 | Integer | false | Minimum value | true | true | true | false | true |
-| 5 | Integer | false | Maximum value | true | true | true | false | true |
-| 6 | Boolean | false | Is nullable | true | true | true | true | true |
-| 7 | Boolean | false | Default value, if is invalid | true | true | true | true | true |
+| Parameter | Type | Required | Default value | Description | `Filter::filterString` | `Filter::filterInt` | `Filter::filterFloat` | `Filter::filterBoolean` | `Filter::filterDatetime` |
+|-|-|-|-|-|-|-|-|-|-|
+| 1 | Any | Yes | - | Value to filter | Yes | Yes | Yes | Yes | Yes |
+| 2 | Any | Yes | - | Error list, passing by reference | Yes | Yes | Yes | Yes | Yes |
+| 3 | Boolean | No | `false`, no sanitize | Sanitize value | Yes | Yes | Yes | No | Yes |
+| 4 | Integer | No | `null`, no minimum value | Minimum value | Yes | Yes | Yes | No | Yes |
+| 5 | Integer | No | `null`, no maximum value | Maximum value | Yes | Yes | Yes | No | Yes |
+| 6 | Boolean | No | `false`, is not nullable | Is nullable | Yes | Yes | Yes | Yes | Yes |
+| 7 | Boolean | No | `null`, no default value | Default value, if is invalid | Yes | Yes | Yes | Yes | Yes |
 
 ```php
 //Create a custom validation, passing the name and callback function
@@ -315,19 +362,19 @@ Filter::use("myFilterRegExpForName", "foo bar");
 
 //Example of group filter
 $filter = Filter::group(array(
-	array("filterString", "My String", false, 10, 50, true "default value"), //Existing function
-	"MyAlias" => array("myFilterFunctionForName", "foo bar", "upper") //Custumized function, using an alias
+	array("filterString", "My String", false, 10, 50, true "default value"), 	//Existing function, using a numerical index
+	"MyAlias" => array("myFilterFunctionForName", "foo bar", "upper") 			//Custumized function, using an alias
 ), $error);
 //Value of $filter:
 //[
-//	  0 => "My String",
-//	  "MyAlias" => "FOO BAR"
+//	  0 => 'My String',
+//	  'MyAlias' => 'FOO BAR'
 //]
 //Value of $error:
 //[
-//	  "MyAlias" => [
-//		  "'foo' is a invalid name",
-//		  "'bar' is a invalid name"
+//	  'MyAlias' => [
+//		  '"foo" is a invalid name',
+//		  '"bar" is a invalid name'
 //	  ]
 //]
 
@@ -354,7 +401,6 @@ Default error messages
 ```php
 //Import the necessary classes
 use Costamilam\Alpha\DB;
-use Costamilam\Alpha\Router;
 
 //Access to the database
 //Note: the connection it isn't now
@@ -364,11 +410,11 @@ DB::access("host", "user", "pass", "db");
 DB::charset("UTF8");
 
 //Select example:
-DB::select("SELECT * FROM foobar WHERE foo = 'bar'");
+DB::select("SELECT * FROM foobar WHERE foo LIKE 'ba_'");
 //Return an associative array, for example:
 //[
-//	  ["id" => 0, "foo" => "bar"],
-//	  ["id" => 1, "foo" => "baz"]
+//	  ['id' => 0, 'foo' => 'bar'],
+//	  ['id' => 1, 'foo' => 'baz']
 //]
 
 //Insert example:
@@ -397,7 +443,6 @@ DB::select("INSERT FROM foobar(foo, file) VALUES(?, ?)", $foo, $file);
 ```php
 //Import the necessary classes
 use Costamilam\Alpha\Auth;
-use Costamilam\Alpha\Token;
 
 //For send by HTTP header
 Auth::enableHTTPHeaderMode();
@@ -406,15 +451,15 @@ Auth::enableHTTPHeaderMode();
 Auth::enableCookieMode();
 ```
 
-> Enabling one mode, disable the other
+> On enabling one mode, disable the other
 
 ```php
 //Configure the auth module
-Token::configure(
+Auth::configureToken(
 	"hs256",					//Algorithm
 	"mY SuperSECRET.key",		//Secret key
-	"http://commandinvest.com",	//Issuer
-	"http://commandinvest.com",	//Audience
+	"https://example.com",		//Issuer
+	"https://example.com",		//Audience
 	30							//Time to expires (in minutes)
 );
 ```
@@ -423,42 +468,42 @@ Token::configure(
 
 ```php
 //Listening status changes
-Token::onStatus("failure", function () {
+Auth::onStatus("failure", function () {
 	echo "Failed to create token!";
 });
 
 //Listening more than one status changes
-//Token::onStatus(array("empty", "invalid", "expired") ...);
+Auth::onStatus(array("empty", "invalid", "expired"), function () { /* ... */ });
 ```
 
-| Name | Description | Response status | Finish execution |
-|--|--|--|--|
-| `created` | Token successfully created | - | No |
-| `failure` | Failed to create token | 500: Internal server error | Yes |
-| `empty` | Request don't have a token | 401: Unauthorized | Yes |
-| `invalid` | Request has a invalid token | 401: Unauthorized | Yes |
-| `expired` | Request has a expired token | 401: Unauthorized | Yes |
-| `forbidden` | The token don't have access to the resource | 403: Forbidden | Yes |
-| `authorized` | Request has a valid token | - | No |
+| Name | Description | Argument | Response status | Finish execution |
+|-|-|-|-|-|
+| `created` | Token successfully created | String of created token | - | No |
+| `failure` | Failed to create token | - | 500: Internal server error | Yes |
+| `empty` | Request don't have a token | - | 401: Unauthorized | Yes |
+| `invalid` | Request has a invalid token | - | 401: Unauthorized | Yes |
+| `expired` | Request has a expired token | Token payload | 401: Unauthorized | Yes |
+| `forbidden` | The token don't have access to the resource | Token payload | 403: Forbidden | Yes |
+| `authorized` | Request has a valid token | Token payload | - | No |
 
-> The "Response" column is the default value for the response status of the request and the "Finish app" column means that the application ends. You can change it by passing a callback function with `Token::onStatus`
+> The "Response status" column is the default value for the response status of the request and the "Finish app" column means that the application ends. You can change it by passing a callback function with `Token::onStatus`
 
 ```php
 //Create and send a token to the client by configured mode, pass the subject and, optionally, other data
 Auth::sendToken(
-	17, //User id
-	array( //Data to save
-		"name" => "Foo", //User name
-		"role" => array("salesman", "admin") //User roles, for authenticate
+	17, 										//For example, the user id
+	array( 										//Data to save
+		"name" => "Foo", 						//User name
+		"role" => array("salesman", "admin") 	//User roles, for authenticate
 	)
 );
 
-//Remove the new token send (cancel "Auth::sendToken")
+//Remove the new token send (cancel 'Auth::sendToken')
 Auth::removeToken();
 
 //Route auth passing a callback function for validate
-Auth::route("ANY", "/foo/bar/", function ($token) {
-	$role = $token->getClain("data");
+Auth::route("ANY", "/foo/bar/", function ($payload) {
+	$role = $payload["data"];
 	$role = $role["role"];
 
 	if (in_array("admin", $role)) {
@@ -467,17 +512,17 @@ Auth::route("ANY", "/foo/bar/", function ($token) {
 		return false; //Not authenticated
 	}
 	//Simplified:
-	//return in_array("admin", $role);
+	return in_array("admin", $token->getClain("data")["role"]);
 });
 
 //For more than one method
-//Token::route(array("GET", "POST") ...);
+Auth::route(array("GET", "POST") "/foo");
 
 //For more than one route
-//Token::route(... "(/baz/[a-z]+|/foo/[0-9]+)" ...);
+Auth::route("GET", "(/baz/[a-z]+|/foo/[0-9]+)");
 
 //For all routes and all methods
-//Token::route("ANY", ".*" ...);
+Auth::route("ANY", ".*");
 ```
 
 > If the callback is null, it means that any **authenticated** user can access any data

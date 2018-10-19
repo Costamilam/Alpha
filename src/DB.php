@@ -169,7 +169,9 @@ class DB
 
         $metadata->free_result();
 
-        if (!$statement->bind_result(...$columnName)) {
+        $columnValue = $columnName;
+
+        if (!$statement->bind_result(...$columnValue)) {
             return null;
         }
 
@@ -178,8 +180,8 @@ class DB
         while($statement->fetch()) {
             $row = array();
 
-            foreach ($columnName as $key => $value) {
-                $row[$key] = $value;
+            for ($i = 0; $i < count($columnName); $i++) { 
+                $row[$columnName[$i]] = $columnValue[$i];
             }
 
             $data[] = $row;

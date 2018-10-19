@@ -7,7 +7,7 @@ class Request
     private static $method;
     private static $header;
     private static $path;
-    protected static $param;
+    private static $param;
     private static $body;
 
     public static function load()
@@ -22,7 +22,7 @@ class Request
             self::$path = str_replace("?".$_SERVER["QUERY_STRING"], "", self::$path);
         }
 
-        self::$header = apache_request_headers();
+        self::loadHeader();
 
         $contentType = self::header("Content-Type");
         $contentType = str_replace("/", "\/", $contentType);
@@ -30,6 +30,29 @@ class Request
             self::$body = json_decode(file_get_contents("php://input"), true);
         } else {
             parse_str(file_get_contents("php://input"), self::$body);
+        }
+    }
+
+    private static function loadHeader()
+    {
+        if (function_exists('apache_request_headers')) {
+            self::$header = apache_request_headers();
+        } else {
+            $arh = array();
+            $rx_http = '/\AHTTP_/';
+            foreach ($_SERVER as $key => $val) {
+                if (preg_match($rx_http, $key)) {
+                    $arh_key = preg_replace($rx_http, '', $key);
+                    $rx_matches = array();
+                    $rx_matches = explode('_', $arh_key);
+                    if (count($rx_matches) > 0 and strlen($arh_key) > 2) {
+                        foreach($rx_matches as $ak_key => $ak_val) $rx_matches[$ak_key] = ucfirst($ak_val);
+                        $arh_key = implode('-', $rx_matches);
+                    }
+                    $arh[$arh_key] = $val;
+                }
+            }
+            self::$header = $arh;
         }
     }
 
@@ -49,9 +72,11 @@ class Request
 
     public static function cookie($name)
     {
-        foreach ($_COOKIE as $key => $value) {
+        foreach (explode("; ", self::header("Cookie")) as $cookie) {
+            list($key, $value) = explode("=", $cookie);
+
             if ($key === $name) {
-                return $value;
+                return urldecode($value);
             }
         }
     }
@@ -66,9 +91,19 @@ class Request
         self::$param = $value;
     }
 
-    public static function param()
+    public static function param(...$index)
     {
-        return self::$param;
+        if (count($index) === 0) {
+            return self::$param;
+        } else {
+            $data = array();
+
+            foreach ($index as $name) {
+                $data[$name] = isset(self::$param[$name]) ? self::$param[$name] : null;
+            }
+
+            return $data;
+        }
     }
 
     public static function body(...$index)
@@ -76,13 +111,13 @@ class Request
         if (count($index) === 0) {
             return self::$body;
         } else {
-            $array = array();
+            $data = array();
 
             foreach ($index as $name) {
-                $array[$name] = isset(self::$body[$name]) ? self::$body[$name] : null;
+                $data[$name] = isset(self::$body[$name]) ? self::$body[$name] : null;
             }
 
-            return $array;
+            return $data;
         }
     }
 }

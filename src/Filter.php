@@ -23,13 +23,9 @@ class Filter
 
     public static function create($name, $callback)
     {
-        if (is_callable($callback)) {
-            self::$filter[$name] = $callback;
+        self::$filter[$name] = $callback;
 
-            return true;
-        } else {
-            return false;
-        }
+        return true;
     }
 
     public static function createWithRegExp($name, $regexp, $errorMessage)
@@ -233,36 +229,3 @@ class Filter
         }
     }
 }
-
-/*
-
-------------------------------------------------------------------------------------------------------------------------------------------------------------
-
-*/
-
-//Máscara para nomes, primeira letra de cada palavra delimitada por $delimiter em maiúculo exceto as $exceptions
-Filter::create("properCase", function($string, $delimiters = array(" ", "'", "O'", "Mc"), $exceptions = array("de", "da", "das", "do", "dos")) {
-    $string = mb_convert_case($string, MB_CASE_TITLE, "UTF-8");
-
-    foreach ($delimiters as $dlnr => $delimiter) {
-        $words = explode($delimiter, $string);
-
-        $newwords = array();
-
-        foreach ($words as $wordnr => $word) {
-            if (in_array(mb_strtoupper($word, "UTF-8"), $exceptions)) {
-                $word = mb_strtoupper($word, "UTF-8");
-            } elseif (in_array(mb_strtolower($word, "UTF-8"), $exceptions)) {
-                $word = mb_strtolower($word, "UTF-8");
-            } elseif (!in_array($word, $exceptions)) {
-                $word = ucfirst($word);
-            }
-
-            array_push($newwords, $word);
-        }
-
-        $string = join($delimiter, $newwords);
-    }
-
-    return $string;
-});

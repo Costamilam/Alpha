@@ -70,7 +70,7 @@ class Response
         return __CLASS__;
     }
 
-    public static function configureCookie($expireInMinutes = 30, $domain = "HTTP_HOST", $secure = true, $httponly = true)
+    public static function configureCookie($expireInMinutes, $domain = "HTTP_HOST", $secure = true, $httponly = true)
     {
         $domain = $domain === "HTTP_HOST" ? Request::header("Host") ?: "" : $domain;
 
@@ -88,6 +88,6 @@ class Response
 
         $expireInMinutes = $expireInMinutes === null ? self::$cookie["expire"] : time() + 60 * $expireInMinutes;
 
-        setcookie($name, $value, $expireInMinutes, "/", self::$cookie["domain"], self::$cookie["secure"], self::$cookie["httponly"]);
+        setcookie($name, urlencode($value), $expireInMinutes, "/", self::$cookie["domain"], self::$cookie["secure"], self::$cookie["httponly"]);
     }
 }

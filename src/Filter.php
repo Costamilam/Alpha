@@ -200,8 +200,7 @@ class Filter
         }
     }
 
-    //"Y-m-d H:i:s"
-    function filterDateTime($value, &$error, $format = null, $min = null, $max = null, $nullable = false, $default = null) {
+    public static function filterDateTime($value, &$error, $format = null, $min = null, $max = null, $nullable = false, $default = null) {
         $error = array();
 
         if ($value instanceof DateTime === false && $value instanceof DateTimeImmutable === false) {

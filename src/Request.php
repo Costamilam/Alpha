@@ -109,7 +109,7 @@ class Request
     public static function body(...$index)
     {
         if (count($index) === 0) {
-            return self::$body;
+            return self::$body ?: array();
         } else {
             $data = array();
 

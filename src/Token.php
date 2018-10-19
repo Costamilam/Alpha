@@ -25,12 +25,12 @@ abstract class Token
     private static $callback;
     private static $executed = array();
 
-    public static function configure($algorithm, $key, $issuer, $audience, $expireInMinutes)
+    protected static function configure($algorithm, $key, $issuer, $audience, $expireInMinutes)
     {
         self::$algorithm = $algorithm;
         self::$issuer = $issuer;
         self::$audience = $audience;
-        self::$expire = time()+60*$expireInMinutes;
+        self::$expire = $expireInMinutes;
 
         if (in_array($algorithm, array("hs256", "hs384", "hs512"))) {
             self::$key = $key;
@@ -80,12 +80,6 @@ abstract class Token
             case "es512":
                 self::$signer = new Signer\Ecdsa\Sha512();
                 break;
-
-            default:
-                self::executeCallback("failure");
-
-                return false;
-                break;
         }
 
         $token = (new Builder())
@@ -93,13 +87,13 @@ abstract class Token
             ->setAudience(self::$audience)
             ->setIssuedAt(time())
             ->setNotBefore(time())
-            ->setExpiration(self::$expire)
+            ->setExpiration(time() + 60 * self::$expire)
             ->setSubject($subject)
             ->set("data", $data)    
             ->sign(self::$signer, is_array(self::$key) ? self::$key["private"] : self::$key)
             ->getToken();
 
-        self::executeCallback("created", $token);
+        self::executeCallback("created", $token->__toString());
 
         return $token;
     }
@@ -115,7 +109,7 @@ abstract class Token
         try {
             $token = (new Parser())->parse($token);
         } catch (\Exception $exception) {
-            self::executeCallback("invalid", $token);
+            self::executeCallback("invalid");
 
             return false;
         }
@@ -125,25 +119,25 @@ abstract class Token
         $validator->setAudience(self::$audience);
 
         if ($token->validate($validator)) {
-            if ($callback === null || is_callable($callback) && call_user_func($callback, $token) === true) {
-                self::executeCallback("authorized", $token);
+            if ($callback === null || is_callable($callback) && call_user_func($callback, self::getPayload($token)) === true) {
+                self::executeCallback("authorized", self::getPayload($token));
             } else {
-                self::executeCallback("forbidden", $token);
+                self::executeCallback("forbidden", self::getPayload($token));
             }
 
             return $token;
         } else {
             if ($token->isExpired()) {
-                self::executeCallback("expired", $token);
+                self::executeCallback("expired", self::getPayload($token));
             } else {
-                self::executeCallback("invalid", $token);
+                self::executeCallback("invalid");
             }
 
             return false;
         }
     }
 
-    public static function onStatus($status, $callback)
+    protected static function onStatus($status, $callback)
     {
         if (is_array($status)) {
             foreach ($status as $value) {
@@ -164,8 +158,6 @@ abstract class Token
 
         if (isset(self::$callback["$status"]) && is_callable(self::$callback["$status"])) {
             call_user_func(self::$callback["$status"], ...$param);
-
-            return true;
         } else {
             $response = array(
                 "empty" => 401,
@@ -177,11 +169,31 @@ abstract class Token
 
             if (isset($response[$status])) {
                 Response::status($response[$status]);
-            }
 
-            App::finish();
+                App::finish();
+            }
+        }
+    }
+
+    private function getPayload($token) {
+        $payload = array();
+        $name = array(
+            "sub" => "subject",
+            "iss" => "issuer",
+            "aud" => "audience",
+            "iat" => "issuedAt",
+            "nbf" => "notBefore",
+            "exp" => "expiration"
+        );
+
+        foreach ($token->getClaims() as $object) {
+            $key = isset($name[$object->getName()]) ? $name[$object->getName()] : $object->getName();
+
+            $value = is_object($object->getValue()) ? json_decode(json_encode($object->getValue()), true) : $object->getValue();
+
+            $payload[$key] = $value;
         }
 
-        return false;
+        return $payload;
     }
 }

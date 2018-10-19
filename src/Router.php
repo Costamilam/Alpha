@@ -119,15 +119,17 @@ class Router
         $regexp = array_merge(array_fill_keys($match[1], "[^/]+"), self::$param, $route["param"]);
 
         $route["param"] = array_filter($regexp, function ($key) use ($route) {
-            return strpos($route["route"], $key) !== false;
+            return strpos($route["route"], '{'.$key.'}') !== false;
         }, ARRAY_FILTER_USE_KEY);
 
         $key = [];
         $routeAux = $route["route"];
 
-        foreach ($regexp as $name => $value) {
+        foreach ($route["param"] as $name => $value) {
             $key[strpos($route["route"], $name)] = $name;
 
+            $routeAux = str_replace('{'.$name.'}?/', "(?:($value)/)?", $routeAux);
+            $routeAux = str_replace('{'.$name.'}?', "($value)?", $routeAux);
             $routeAux = str_replace('{'.$name.'}', "($value)", $routeAux);
         }
 
@@ -143,7 +145,11 @@ class Router
 
         array_shift($match);
 
-        $match = array_combine($key, $match);        
+        while (count($match) < count($key)) {
+            $match[] = null;
+        }
+
+        $match = array_combine($key, $match);
 
         Request::setParam($match);
 
@@ -165,12 +171,12 @@ class Router
             $result = call_user_func($route["callback"], ...self::$next);
         }
 
-        if ($result === false) {
-            App::finish();
-        } elseif ($result !== null) {
-            self::$next = is_array($result) ? $result : array($result);
+        if ($result === true) {
+            self::$next = array();
+        } elseif (is_array($result)) {
+            self::$next = $result;
         } else {
-            self::$next = [];
+            App::finish();
         }
     }
 }

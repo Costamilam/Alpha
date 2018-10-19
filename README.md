@@ -54,12 +54,12 @@ Router::addParamRegExp("bar", "[0-9]*");
 //Create a route by defining the method, route, and callback
 Router::set("GET", "/my/route/", function () {
 	//...
-})
+});
 
 //Define more than one method
 Router::set(array("GET", "POST"), "/my/route/", function () {
 	//...
-})
+});
 ```
 
 | Method | Function | Description |
@@ -151,13 +151,13 @@ class Foo {
 	}
 
 	public function getInstanceFoo() {
-		echo "Instance ".$this->foobar; //Instance Foo
+		echo "Instance ".$this->foobar; 	//Instance Foo
 
-		$this->foobar = "Bar"; //Change foobar
+		$this->foobar = "Bar"; 				//Change foobar
 	}
 
 	public function getInstanceBar() {
-		echo "Instance ".$this->foobar; //Instance Bar
+		echo "Instance ".$this->foobar; 	//Instance Bar
 	}
 }
 ```
@@ -208,8 +208,8 @@ Request::header("foobar");
 > Multiline header returns separated by commas, for example, "foo, bar, baz"
 
 ```php
-//Get the request path
-Request::path(); //Example: '/', '/foo/', '/foo/123'
+//Get the request path, for example: '/', '/foo/', '/foo/123'
+Request::path();
 
 //Get the request parameters
 Request::param();
@@ -506,10 +506,11 @@ Auth::route("ANY", "/foo/bar/", function ($payload) {
 	$role = $role["role"];
 
 	if (in_array("admin", $role)) {
-		return true; //Authenticated
+		return true; 	//Authenticated
 	} else {
-		return false; //Not authenticated
+		return false; 	//Not authenticated
 	}
+
 	//Simplified:
 	return in_array("admin", $token->getClain("data")["role"]);
 });

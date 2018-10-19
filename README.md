@@ -468,8 +468,8 @@ Auth::configureToken(
 
 ```php
 //Listening status changes
-Auth::onStatus("failure", function () {
-	echo "Failed to create token!";
+Auth::onStatus("authorized", function ($tokenPayload) {
+	echo "User authorized!";
 });
 
 //Listening more than one status changes
@@ -479,7 +479,6 @@ Auth::onStatus(array("empty", "invalid", "expired"), function () { /* ... */ });
 | Name | Description | Argument | Response status | Finish execution |
 |-|-|-|-|-|
 | `created` | Token successfully created | String of created token | - | No |
-| `failure` | Failed to create token | - | 500: Internal server error | Yes |
 | `empty` | Request don't have a token | - | 401: Unauthorized | Yes |
 | `invalid` | Request has a invalid token | - | 401: Unauthorized | Yes |
 | `expired` | Request has a expired token | Token payload | 401: Unauthorized | Yes |

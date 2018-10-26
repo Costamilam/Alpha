@@ -126,7 +126,7 @@ class DB
     {
         $query = self::format($query);
 
-        if (stripos($query, "updadte") !== 0) {
+        if (stripos($query, "update") !== 0) {
             return false;
         }
 

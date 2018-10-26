@@ -72,7 +72,13 @@ class Request
 
     public static function cookie($name)
     {
-        foreach (explode("; ", self::header("Cookie")) as $cookie) {
+        $cookieHeader = self::header("Cookie");
+
+        if ($cookieHeader === null) {
+            return null;
+        }
+
+        foreach (explode("; ", $cookieHeader) as $cookie) {
             list($key, $value) = explode("=", $cookie);
 
             if ($key === $name) {

@@ -91,6 +91,21 @@ class Router
         return self::route("DELETE", $route, $callback, $option);
     }
 
+    public static function options($route, $callback, $option = array())
+    {
+        return self::route("OPTIONS", $route, $callback, $option);
+    }
+
+    public static function connect($route, $callback, $option = array())
+    {
+        return self::route("CONNECT", $route, $callback, $option);
+    }
+
+    public static function trace($route, $callback, $option = array())
+    {
+        return self::route("TRACE", $route, $callback, $option);
+    }
+
     private static function route($method, $route, $callback, $option = array())
     {
         $route = array(

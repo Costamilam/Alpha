@@ -70,6 +70,9 @@ Router::set(array("GET", "POST"), "/my/route/", function () {
 | PUT | `Router::put` | PUT HTTP method |
 | DELETE | `Router::delete` | DELETE HTTP method |
 | PATCH | `Router::patch` | PATCH HTTP method |
+| OPTIONS | `Router::options` | OPTIONS HTTP method |
+| CONNECT | `Router::connect` | CONNECT HTTP method |
+| TRACE | `Router::trace` | TRACE HTTP method |
 | Enumeration | `Router::set` | Define one or more HTTP method |
 
 ```php
@@ -489,11 +492,13 @@ Auth::onStatus(array("empty", "invalid", "expired"), function () { /* ... */ });
 
 ```php
 //Create and send a token to the client by configured mode, pass the subject and, optionally, other data
-Auth::sendToken(
-	17, 										//For example, the user id
-	array( 										//Data to save
-		"name" => "Foo", 						//User name
-		"role" => array("salesman", "admin") 	//User roles, for authenticate
+Auth::setToken(
+	Auth::createToken(
+		17, 										//For example, the user id
+		array( 										//Data to save
+			"name" => "Foo", 						//User name
+			"role" => array("salesman", "admin") 	//User roles, for authenticate
+		)
 	)
 );
 

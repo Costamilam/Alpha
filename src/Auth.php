@@ -36,38 +36,19 @@ class Auth extends Token
     public static function route($method, $route, $callback = null)
     {
         if ((strtoupper($method) === "ANY" || strtoupper($method) === Request::method()) && preg_match("/^".str_replace("/", "\/", $route)."$/", Request::path())) {
-            $token = null;
-
-            if (self::$cookie) {
-                $auth = Request::cookie("Token");
-
-                $token = $auth;
-            } elseif (self::$httpHeader) {
-                $auth = Request::header("Authorization");
-
-                if ($auth !== null) {
-                    preg_match("/(.*) (.*)/", $auth, $auth);
-
-                    if (isset($auth[1]) && strtolower($auth[1]) === "bearer" && isset($auth[2])) {
-                        $token = $auth[2];
-                    }
-                }
-            }
-
-            parent::verify($token, $callback);
+            parent::verify(self::getToken(), $callback);
         }
     }
 
-    public static function sendToken($subject, $data = null)
+    public static function createToken($subject, $data = null)
     {
-        $token = parent::create($subject, $data);
+        return parent::create($subject, $data)->__toString();
+    }
 
-        if ($token === false) {
-            return false;
-        }
-
+    public static function setToken($token)
+    {
         if (self::$cookie) {
-            Response::cookie("Token", $token->__toString(), parent::$expire);
+            Response::cookie("Token", $token, parent::$expire);
         } elseif (self::$httpHeader) {        
             Response::header("Token", $token);
         }
@@ -75,7 +56,7 @@ class Auth extends Token
         return $token;
     }
 
-    private static function getToken()
+    public static function getToken()
     {
         if (self::$cookie) {
             return Request::cookie("Token");
@@ -92,7 +73,7 @@ class Auth extends Token
         }
     }
 
-    private static function removeToken()
+    public static function removeToken()
     {
         if (self::$cookie) {
             Response::cookie("Token", "", 0);

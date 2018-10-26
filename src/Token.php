@@ -163,8 +163,7 @@ abstract class Token
                 "empty" => 401,
                 "expired" => 401,
                 "invalid" => 401,
-                "forbidden" => 403,
-                "failure" => 500
+                "forbidden" => 403
             );
 
             if (isset($response[$status])) {

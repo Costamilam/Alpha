@@ -35,7 +35,7 @@ class Auth extends Token
 
     public static function route($method, $route, $callback = null)
     {
-        if ((strtoupper($method) === "ANY" || strtoupper($method) === Request::method()) && preg_match("/^".str_replace("/", "\/", $route)."$/", Request::path())) {
+        if ((strtoupper($method) === 'ANY' || strtoupper($method) === Request::method()) && preg_match('/^'.str_replace('/', '\/', $route).'$/', Request::path())) {
             parent::verify(self::getToken(), $callback);
         }
     }
@@ -48,9 +48,9 @@ class Auth extends Token
     public static function setToken($token)
     {
         if (self::$cookie) {
-            Response::cookie("Token", $token, parent::$expire);
+            Response::cookie('Token', $token, parent::$expire);
         } elseif (self::$httpHeader) {        
-            Response::header("Token", $token);
+            Response::header('Token', $token);
         }
 
         return $token;
@@ -59,12 +59,12 @@ class Auth extends Token
     public static function getToken()
     {
         if (self::$cookie) {
-            return Request::cookie("Token");
+            return Request::cookie('Token');
         } elseif (self::$httpHeader) {
-            $auth = Request::header("Authorization");
+            $auth = Request::header('Token');
 
             if ($auth !== null) {
-                preg_match("/(.*) (.*)/", $auth, $auth);
+                preg_match('/(.*) (.*)/', $auth, $auth);
 
                 $auth = isset($auth[2]) ? $auth[2] : null;
             }
@@ -76,9 +76,9 @@ class Auth extends Token
     public static function removeToken()
     {
         if (self::$cookie) {
-            Response::cookie("Token", "", 0);
+            Response::cookie('Token', '', 0);
         } elseif (self::$httpHeader) {
-            Response::header("Token");
+            Response::header('Token');
         }
     }
 }

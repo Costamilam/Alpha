@@ -15,10 +15,10 @@ class DB
     public static function access($host, $username, $password, $database)
     {
         self::$access = array(
-            "host" => $host,
-            "username" => $username,
-            "password" => $password,
-            "database" => $database
+            'host' => $host,
+            'username' => $username,
+            'password' => $password,
+            'database' => $database
         );
     }
 
@@ -29,17 +29,17 @@ class DB
 
     private static function format($query)
     {
-        $formattedQuery = preg_replace("/[\t\n\r]/", "", $query);
+        $formattedQuery = preg_replace('/[\t\n\r]/', '', $query);
 
-        $formattedQuery = explode(" ", $formattedQuery);
+        $formattedQuery = explode(' ', $formattedQuery);
                 
         $formattedQuery = array_filter($formattedQuery);
               
-        $formattedQuery = implode($formattedQuery, " ");
+        $formattedQuery = implode($formattedQuery, ' ');
 
-        $formattedQuery = trim($formattedQuery, ";");
+        $formattedQuery = trim($formattedQuery, ';');
 
-        $formattedQuery = explode(";", $formattedQuery);
+        $formattedQuery = explode(';', $formattedQuery);
 
         return $formattedQuery[0];
     }
@@ -47,7 +47,7 @@ class DB
     private static function connect()
     {
         if (!self::$connection) {
-            self::$connection = new \mysqli(self::$access["host"], self::$access["username"], self::$access["password"], self::$access["database"]);
+            self::$connection = new \mysqli(self::$access['host'], self::$access['username'], self::$access['password'], self::$access['database']);
 
             if (self::$charset) {
                 self::$connection->set_charset(self::$charset);
@@ -64,26 +64,26 @@ class DB
 
         foreach ($param as &$parameter) {
             switch(strtolower(gettype($parameter))) {
-                case "string":
-                    $type[] = "s";
+                case 'string':
+                    $type[] = 's';
                     break;
 
-                case "integer":
-                    $type[] = "i";
+                case 'integer':
+                    $type[] = 'i';
                     break;
 
-                case "float":
-                    $type[] = "d";
+                case 'float':
+                    $type[] = 'd';
                     break;
 
-                case "boolean":
-                    $type[] = "i";
+                case 'boolean':
+                    $type[] = 'i';
                     break;
 
-                case "resource":
+                case 'resource':
                     $blob[count($type)] = $parameter;
                     $parameter = null;
-                    $type[] = "b";
+                    $type[] = 'b';
                     break;
 
                 default:
@@ -95,7 +95,7 @@ class DB
         $statement = self::connect()->prepare($query);
 
         if (!empty($type)) {
-            $statement->bind_param(implode("", $type), ...$param);
+            $statement->bind_param(implode('', $type), ...$param);
         }
 
         foreach ($blob as $index => $data) {
@@ -111,7 +111,7 @@ class DB
     {
         $query = self::format($query);
 
-        if (stripos($query, "insert") !== 0) {
+        if (stripos($query, 'insert') !== 0) {
             return false;
         }
 
@@ -126,7 +126,7 @@ class DB
     {
         $query = self::format($query);
 
-        if (stripos($query, "update") !== 0) {
+        if (stripos($query, 'update') !== 0) {
             return false;
         }
 
@@ -137,7 +137,7 @@ class DB
     {
         $query = self::format($query);
 
-        if (stripos($query, "delete") !== 0) {
+        if (stripos($query, 'delete') !== 0) {
             return false;
         }
 
@@ -148,7 +148,7 @@ class DB
     {
         $query = self::format($query);
 
-        if (stripos($query, "select") !== 0) {
+        if (stripos($query, 'select') !== 0) {
             return false;
         }
 
@@ -164,7 +164,7 @@ class DB
         $columnName = array();
 
         foreach ($metadata->fetch_fields() as $field) {
-            $columnName[] = json_decode(json_encode($field), true)["name"];
+            $columnName[] = json_decode(json_encode($field), true)['name'];
         }
 
         $metadata->free_result();

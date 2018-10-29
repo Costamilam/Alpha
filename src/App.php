@@ -29,7 +29,7 @@ class App
 
         Request::load();
 
-        Response::configureCookie(30, "", false, true);
+        Response::configureCookie(30, '', false, true);
     }
 
     public function __destruct()

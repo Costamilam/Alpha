@@ -29,7 +29,7 @@ composer require costamilam/alpha:dev-master
 
 ```php
 //Include a composer autoload
-require_once "./vendor/autoload.php";
+require_once './vendor/autoload.php';
 
 //Import the App class
 use Costamilam\Alpha\App;
@@ -49,15 +49,15 @@ use Costamilam\Alpha\Router;
 use Costamilam\Alpha\Request;
 
 //Define default RegExp for all parameters 'bar'
-Router::addParamRegExp("bar", "[0-9]*");
+Router::addParamRegExp('bar', '[0-9]*');
 
 //Create a route by defining the method, route, and callback
-Router::set("GET", "/my/route/", function () {
+Router::set('GET', '/my/route/', function () {
 	//...
 });
 
 //Define more than one method
-Router::set(array("GET", "POST"), "/my/route/", function () {
+Router::set(array('GET', 'POST'), '/my/route/', function () {
 	//...
 });
 ```
@@ -77,19 +77,19 @@ Router::set(array("GET", "POST"), "/my/route/", function () {
 
 ```php
 //Using parameters with '{}'
-Router::get("/{foo}/", function () {
+Router::get('/{foo}/', function () {
 	//Get parameters
 	$listOfParams = Request::param();
 }, array(
 	//Optionally, define the RegExp to param, if you don't use, the default is '[^\/]+'
-	"param" => array(
-		"foo" => "[a-z]+",
-		"bar" => "[0-9]?" //Disconsidered, because there is no parameter 'bar'
+	'param' => array(
+		'foo' => '[a-z]+',
+		'bar' => '[0-9]?' //Disconsidered, because there is no parameter 'bar'
 	)
 ));
 
 //Set optional param with '?'
-Router::get("/{foo}/{bar}?/", function () {
+Router::get('/{foo}/{bar}?/', function () {
 	Request::param();
 	//If request is '/theFOO/'
 	//[
@@ -99,7 +99,7 @@ Router::get("/{foo}/{bar}?/", function () {
 });
 
 //You can pass regexp in the route, but it is not a parameter
-Router::get("/{foo}/[0-9]+/", function () {
+Router::get('/{foo}/[0-9]+/', function () {
 	Request::param();
 	//[
 	//	  'foo' => 'The value of {foo}'
@@ -107,30 +107,30 @@ Router::get("/{foo}/[0-9]+/", function () {
 });
 
 //Optionally, execute similar routes by adding '.*' at the end of the route, for request '/foo/bar/'
-Router::get("/foo/.*", function () {
+Router::get('/foo/.*', function () {
 	//It is executed
 });
-Router::get("/foo/bar/", function () {
+Router::get('/foo/bar/', function () {
 	//But it is not executed
 });
 
 //Middleware, you can return array in function, this is passed as argument in the next function
-Router::get("/foo/", function () {
+Router::get('/foo/', function () {
 	//...
-	return array("bar", "baz");
+	return array('bar', 'baz');
 });
-Router::get("/foo/bar/", function ($bar, $baz) {
+Router::get('/foo/bar/', function ($bar, $baz) {
 	//$bar === 'bar';
 	//$baz === 'baz';
 });
 
 //If return is true, the execution continue to next route
-Router::get("/foo/bar/", function () {
+Router::get('/foo/bar/', function () {
 	//It is executed
 
 	return true;
 });
-Router::get("/foo/{bar}/", function () {
+Router::get('/foo/{bar}/', function () {
 	//It is executed
 });
 ```
@@ -139,28 +139,32 @@ Router::get("/foo/{bar}/", function () {
 
 ```php
 //To use an external function, pass namespace, the type ('->' for instance or '::' for static) and the function name as string
-Router::get("/foo/", "Namespace\To\Foo::getStaticFoo");
-Router::get("/foo/", "Namespace\To\Foo->getInstanceFoo");
-Router::get("/foo/", "Namespace\To\Foo->getInstanceBar");
+Router::get('/foo/', 'Namespace\To\Foo::getStaticFoo');
+Router::get('/foo/', 'Namespace\To\Foo->getInstanceFoo');
+Router::get('/foo/', 'Namespace\To\Foo->getInstanceBar');
 
 //In '/Namespace/To/Foo.php' ...
 namespace Namespace\To;
 
 class Foo {
-	private $foobar = "Foo";
+	private $foobar = 'Foo';
 
 	public static function getStaticFoo() {
-		echo "Static Foo!!!";
+		echo 'Static Foo!!!';
+
+		return true;
 	}
 
 	public function getInstanceFoo() {
-		echo "Instance ".$this->foobar; 	//Instance Foo
+		echo 'Instance '.$this->foobar; 	//Instance Foo
 
-		$this->foobar = "Bar"; 				//Change foobar
+		$this->foobar = 'Bar'; 				//Change foobar
+
+		return true;
 	}
 
 	public function getInstanceBar() {
-		echo "Instance ".$this->foobar; 	//Instance Bar
+		echo 'Instance '.$this->foobar; 	//Instance Bar
 	}
 }
 ```
@@ -170,9 +174,9 @@ class Foo {
 ```php
 use Namespace\To\Foo;
 
-Router::addInstance("Namespace\To\Foo", new Foo("foo"));
+Router::addInstance('Namespace\To\Foo', new Foo('foo'));
 //Or using aliases
-Router::addInstance("AliasFoo", new Foo("foo"));
+Router::addInstance('AliasFoo', new Foo('foo'));
 
 //In '/Namespace/To/Foo.php' ...
 namespace Namespace\To;
@@ -190,9 +194,9 @@ class Foo {
 }
 
 //Using
-Router::any("/foobar", "Namespace\To\Foo->printFoo");
+Router::any('/foobar', 'Namespace\To\Foo->printFoo');
 //Or
-Router::any("/foobar", "AliasFoo->printFoo");
+Router::any('/foobar', 'AliasFoo->printFoo');
 ```
 
 **Request:**
@@ -205,10 +209,10 @@ use Costamilam\Alpha\Request;
 Request::method(); //Example: 'GET', 'POST', 'DELETE', ...
 
 //Get the request header
-Request::header("foobar");
+Request::header('foobar');
 ```
 
-> Multiline header returns separated by commas, for example, "foo, bar, baz"
+> Multiline header returns separated by commas, for example, 'foo, bar, baz'
 
 ```php
 //Get the request path, for example: '/', '/foo/', '/foo/123'
@@ -223,7 +227,7 @@ Request::param();
 //]
 
 //Get fields specific to the request parameters, if the key does not exist, create it with null value
-Request::param("baz", "bar", "qux");
+Request::param('baz', 'bar', 'qux');
 
 //Get the request body
 Request::body();
@@ -234,7 +238,7 @@ Request::body();
 //]
 
 //Get fields specific to the request body, if the key does not exist, create it with null value
-Request::body("foo" "bar");
+Request::body('foo', 'bar');
 //Example:
 //[
 //	  'foo' => null,
@@ -252,26 +256,26 @@ use Costamilam\Alpha\Response;
 Response::status(404);
 
 //Add a response header
-Response::header("Access-Control-Allow-Origin", "localhost");
+Response::header('Access-Control-Allow-Origin', 'localhost');
 //Add a response header, without replacing the previous
-Response::header("Access-Control-Allow-Origin", "http://domain.com", false);
+Response::header('Access-Control-Allow-Origin', 'http://domain.com', false);
 
 //Add a multiple response header
 Response::multiHeader(array(
-	"Access-Control-Allow-Methods" => "POST, GET"
-	"Access-Control-Allow-Headers" => "X-PINGOTHER, Content-Type"
+	'Access-Control-Allow-Methods' => 'POST, GET'
+	'Access-Control-Allow-Headers' => 'X-PINGOTHER, Content-Type'
 ));
 
 //Remove a response header
-Response::header("Access-Control-Allow-Headers");
+Response::header('Access-Control-Allow-Headers');
 
 //Change the body of the response
-Response::text("<h1>Response Text</h1>");
+Response::text('<h1>Response Text</h1>');
 
 //Change the body of the response using JSON format
 Response::json(array(
-	"foo" => "bar",
-	"baz" => array(true, false, null, "")
+	'foo' => 'bar',
+	'baz' => array(true, false, null, '')
 ));
 
 //Pass '0' or 'false' to no cache and an integer in minutes to cache control
@@ -286,30 +290,30 @@ Response::cache(15);
 //Change default cookie options
 Response::configureCookie(
 	24 * 60, 		//Time to expire in minutes (24 hours)
-	"HTTP_HOST", 	//If present, use Host request header else use empty string ('')
+	'HTTP_HOST', 	//If present, use Host request header else use empty string ('')
 	true, 			//Only HTTPS (recommended true)
 	true 			//Access only http, disable access by JavaScript (recommended true)
 );
 ```
 
-> Attention: If you set the domain to "HTTP_HOST" and access with a local server passing the port, for example 'localhost:8000', the cookie will not work. In this case, you need to set the domain to 'localhost' without the port
+> Attention: If you set the domain to 'HTTP_HOST' and access with a local server passing the port, for example 'localhost:8000', the cookie will not work. In this case, you need to set the domain to 'localhost' without the port
 
 ```php
 //Send a cookie
-Response::cookie("foo", "bar");
+Response::cookie('foo', 'bar');
 
 //Send a cookie with a different expiration (12 hours, default is 24 hours)
-Response::cookie("foo", "bar", 12 * 60);
+Response::cookie('foo', 'bar', 12 * 60);
 ```
 
 Future implementation:
 
 ```php
 //Response with file, pass path to file, name and last parameter determines if force download (not implemented)
-Response::file("path/to/file.txt", "Name File", true);
+Response::file('path/to/file.txt', 'Name File', true);
 
 //Redirect to another route (not implemented)
-Response::redirect("GET", "/foo/bar/");
+Response::redirect('GET', '/foo/bar/');
 ```
 
 **Filter, sanitize and validator:**
@@ -319,11 +323,11 @@ Response::redirect("GET", "/foo/bar/");
 use Costamilam\Alpha\Filter;
 
 //Validate if is empty
-Filter::isEmpty("", 0, 0.0, false, array(""));
+Filter::isEmpty('', 0, 0.0, false, array(''));
 //Returns true if one or more arguments are null, empty string or empty array. 0 and false is considered a valid value
 
 //Validate using an existing function
-Filter::validateString("<p>Foo</p>", $error, true, 1, 100, false, "Bar");
+Filter::validateString('<p>Foo</p>', $error, true, 1, 100, false, 'Bar');
 ```
 
 | Parameter | Type | Required | Default value | Description | `Filter::filterString` | `Filter::filterInt` | `Filter::filterFloat` | `Filter::filterBoolean` | `Filter::filterDatetime` |
@@ -338,17 +342,17 @@ Filter::validateString("<p>Foo</p>", $error, true, 1, 100, false, "Bar");
 
 ```php
 //Create a custom validation, passing the name and callback function
-Filter::create("myFilterFunctionForName", function ($value, &$error, $to) {
+Filter::create('myFilterFunctionForName', function ($value, &$error, $to) {
 	$error = array();
 
-	if(strpos($value, "foo") !== false) {
-		$error[] = "'foo' is a invalid name";
+	if(strpos($value, 'foo') !== false) {
+		$error[] = '"foo" is a invalid name';
 	}
-	if(strpos($value, "bar") !== false) {
-		$error[] = "'bar' is a invalid name";
+	if(strpos($value, 'bar') !== false) {
+		$error[] = '"bar" is a invalid name';
 	}
 
-	$value = $to === "upper" ? strtoupper($value) : strtolower($value);
+	$value = $to === 'upper' ? strtoupper($value) : strtolower($value);
 
 	return $value;
 });
@@ -358,15 +362,15 @@ Filter::create("myFilterFunctionForName", function ($value, &$error, $to) {
 
 ```php
 //Create a custom validation, passing the name, regexp and the error message (if failure)
-Filter::createWithRegExp("myFilterRegExpForName", "/^[a-z ]+$/", "Invalid name!!!");
+Filter::createWithRegExp('myFilterRegExpForName', '/^[a-z ]+$/', 'Invalid name!!!');
 
 //For use custum filter
-Filter::use("myFilterRegExpForName", "foo bar");
+Filter::use('myFilterRegExpForName', 'foo bar');
 
 //Example of group filter
 $filter = Filter::group(array(
-	array("filterString", "My String", false, 10, 50, true "default value"), 	//Existing function, using a numerical index
-	"MyAlias" => array("myFilterFunctionForName", "foo bar", "upper") 			//Custumized function, using an alias
+	array('filterString', 'My String', false, 10, 50, true, 'default value'), 	//Existing function, using a numerical index
+	'MyAlias' => array('myFilterFunctionForName', 'foo bar', 'upper') 			//Custumized function, using an alias
 ), $error);
 //Value of $filter:
 //[
@@ -383,8 +387,8 @@ $filter = Filter::group(array(
 
 //You can change default error message of existing filter
 Filter::changeErrorMessage(array(
-	"maximumValue" => "Maximum value overflow! Try again.",
-	"notNull" => "Value is not nullable! Try again."
+	'maximumValue' => 'Maximum value overflow! Try again.',
+	'notNull' => 'Value is not nullable! Try again.'
 ));
 ```
 
@@ -407,13 +411,13 @@ use Costamilam\Alpha\DB;
 
 //Access to the database
 //Note: the connection it isn't now
-DB::access("host", "user", "pass", "db");
+DB::access('host', 'user', 'pass', 'db');
 
-//Connection charset, recommended "UTF8"
-DB::charset("UTF8");
+//Connection charset, recommended 'UTF8'
+DB::charset('UTF8');
 
 //Select example:
-DB::select("SELECT * FROM foobar WHERE foo LIKE 'ba_'");
+DB::select('SELECT * FROM foobar WHERE foo LIKE "ba%"');
 //Return an associative array, for example:
 //[
 //	  ['id' => 0, 'foo' => 'bar'],
@@ -421,24 +425,24 @@ DB::select("SELECT * FROM foobar WHERE foo LIKE 'ba_'");
 //]
 
 //Insert example:
-DB::insert("INSERT FROM foobar(foo) VALUES('bar')");
+DB::insert('INSERT FROM foobar(foo) VALUES("bar")');
 //The last id inserted with this connection
 $lastInsert = DB::$insertedId;
 
 //Update example:
-DB::update("UPDATE foobar SET foo = 'bar' WHERE foo <> 'bar'");
+DB::update('UPDATE foobar SET foo = "bar" WHERE foo <> "bar"');
 
 //Delete example:
-DB::delete("DELETE * FROM foobar WHERE foo = 'bar'");
+DB::delete('DELETE * FROM foobar WHERE foo = "bar"');
 
 //Passing variables, (prepared statement)
-DB::select("SELECT * FROM foobar WHERE id = ?", $lastInsert);
+DB::select('SELECT * FROM foobar WHERE id = ?', $lastInsert);
 
 //The type used is the variable's gettype
 //For files, pass a Resource:
-$foo = "baz";
-$file = fopen("path/to/file.txt");
-DB::select("INSERT FROM foobar(foo, file) VALUES(?, ?)", $foo, $file);
+$foo = 'baz';
+$file = fopen('path/to/file.txt');
+DB::select('INSERT FROM foobar(foo, file) VALUES(?, ?)', $foo, $file);
 ```
 
 **Auth** (with JWT):
@@ -459,10 +463,10 @@ Auth::enableCookieMode();
 ```php
 //Configure the auth module
 Auth::configureToken(
-	"hs256",					//Algorithm
-	"mY SuperSECRET.key",		//Secret key
-	"https://example.com",		//Issuer
-	"https://example.com",		//Audience
+	'hs256',					//Algorithm
+	'mY SuperSECRET.key',		//Secret key
+	'https://example.com',		//Issuer
+	'https://example.com',		//Audience
 	30							//Time to expires (in minutes)
 );
 ```
@@ -471,12 +475,12 @@ Auth::configureToken(
 
 ```php
 //Listening status changes
-Auth::onStatus("authorized", function ($tokenPayload) {
-	echo "User authorized!";
+Auth::onStatus('authorized', function ($tokenPayload) {
+	echo 'User authorized!';
 });
 
 //Listening more than one status changes
-Auth::onStatus(array("empty", "invalid", "expired"), function () { /* ... */ });
+Auth::onStatus(array('empty', 'invalid', 'expired'), function () { /* ... */ });
 ```
 
 | Name | Description | Argument | Response status | Finish execution |
@@ -488,7 +492,7 @@ Auth::onStatus(array("empty", "invalid", "expired"), function () { /* ... */ });
 | `forbidden` | The token don't have access to the resource | Token payload | 403: Forbidden | Yes |
 | `authorized` | Request has a valid token | Token payload | - | No |
 
-> The "Response status" column is the default value for the response status of the request and the "Finish app" column means that the application ends. You can change it by passing a callback function with `Token::onStatus`
+> The 'Response status' column is the default value for the response status of the request and the 'Finish app' column means that the application ends. You can change it by passing a callback function with `Token::onStatus`
 
 ```php
 //Create and send a token to the client by configured mode, pass the subject and, optionally, other data
@@ -496,8 +500,8 @@ Auth::setToken(
 	Auth::createToken(
 		17, 										//For example, the user id
 		array( 										//Data to save
-			"name" => "Foo", 						//User name
-			"role" => array("salesman", "admin") 	//User roles, for authenticate
+			'name' => 'Foo', 						//User name
+			'role' => array('salesman', 'admin') 	//User roles, for authenticate
 		)
 	)
 );
@@ -506,28 +510,28 @@ Auth::setToken(
 Auth::removeToken();
 
 //Route auth passing a callback function for validate
-Auth::route("ANY", "/foo/bar/", function ($payload) {
-	$role = $payload["data"];
-	$role = $role["role"];
+Auth::route('ANY', '/foo/bar/', function ($payload) {
+	$role = $payload['data'];
+	$role = $role['role'];
 
-	if (in_array("admin", $role)) {
+	if (in_array('admin', $role)) {
 		return true; 	//Authenticated
 	} else {
 		return false; 	//Not authenticated
 	}
 
 	//Simplified:
-	return in_array("admin", $token->getClain("data")["role"]);
+	return in_array('admin', $token->getClain('data')['role']);
 });
 
 //For more than one method
-Auth::route(array("GET", "POST") "/foo");
+Auth::route(array('GET', 'POST'), '/foo');
 
 //For more than one route
-Auth::route("GET", "(/baz/[a-z]+|/foo/[0-9]+)");
+Auth::route('GET', '(/baz/[a-z]+|/foo/[0-9]+)');
 
 //For all routes and all methods
-Auth::route("ANY", ".*");
+Auth::route('ANY', '.*');
 ```
 
 > If the callback is null, it means that any **authenticated** user can access any data

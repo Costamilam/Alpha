@@ -7,12 +7,12 @@ class Filter
     private static $filter = array();
 
     private static $errorMessage = array(
-        "minimumValue" => "Insufficient minimum value",
-        "maximumValue" => "Maximum value overflow",
-        "notNullable" => "Value is not nullable",
-        "invalidBoolean" => "Invalid boolean",
-        "invalidInt" => "Invalid int",
-        "invalidFloat" => "Invalid float"
+        'minimumValue' => 'Insufficient minimum value',
+        'maximumValue' => 'Maximum value overflow',
+        'notNullable' => 'Value is not nullable',
+        'invalidBoolean' => 'Invalid boolean',
+        'invalidInt' => 'Invalid int',
+        'invalidFloat' => 'Invalid float'
     );
 
     public function changeErrorMessage($errorList) {
@@ -57,7 +57,7 @@ class Filter
 
             if (array_key_exists($function, self::$filter)) {
                 $value = self::$filter[$function](array_shift($value), $status, ...$value);
-            } elseif (is_callable(__CLASS__."::$function")) {
+            } elseif (is_callable(__CLASS__.'::$function')) {
                 $value = self::{$function}(array_shift($value), $status, ...$value);
             } else {
                 continue;
@@ -77,7 +77,7 @@ class Filter
     {
         foreach ($variable as $value) {
             if (
-                (gettype($variable) === "string" && trim($variable) === "")
+                (gettype($variable) === 'string' && trim($variable) === '')
                 || (is_array($variable) && count($variable) === 0)
                 || $variable === null
             ) {
@@ -91,17 +91,17 @@ class Filter
     private static function filter($value, $isString, &$error, $min = null, $max = null, $nullable = false, $default = null) {
         //Verify min size
         if ($min !== null && ($type && strlen($value) < $min || !$type && $value < $min)) {
-            $error[] = self::$errorMessage["minimumValue"];
+            $error[] = self::$errorMessage['minimumValue'];
         }
 
         //Verify max size
         if ($max !== null && ($type && strlen($value) > $max || !$type && $value > $max)) {
-            $error[] = self::$errorMessage["maximumValue"];
+            $error[] = self::$errorMessage['maximumValue'];
         }
 
         //Verify if is null
         if ($nullable === false && $value === null) {
-            $error[] = self::$errorMessage["notNullable"];
+            $error[] = self::$errorMessage['notNullable'];
         }
 
         //Return value, default value or null
@@ -125,13 +125,13 @@ class Filter
         $error = array();
 
         if ($sanitize === true) {
-            $value = filter_var($value, FILTER_SANITIZE_NUMBER_INT, array("flags" => FILTER_FLAG_ALLOW_OCTAL | FILTER_FLAG_ALLOW_HEX));
+            $value = filter_var($value, FILTER_SANITIZE_NUMBER_INT, array('flags' => FILTER_FLAG_ALLOW_OCTAL | FILTER_FLAG_ALLOW_HEX));
         }
 
-        $validate = filter_var($value, FILTER_VALIDATE_INT, array("flags" => FILTER_FLAG_ALLOW_OCTAL | FILTER_FLAG_ALLOW_HEX));
+        $validate = filter_var($value, FILTER_VALIDATE_INT, array('flags' => FILTER_FLAG_ALLOW_OCTAL | FILTER_FLAG_ALLOW_HEX));
 
         if ($validate === false) {
-            $error[] = self::$errorMessage["invalidInt"];
+            $error[] = self::$errorMessage[''];
 
             return $value;
         }
@@ -146,14 +146,14 @@ class Filter
         $error = array();
 
         if ($sanitize === true) {
-            $value = filter_var($value, FILTER_SANITIZE_NUMBER_FLOAT, array("flags" => FILTER_FLAG_ALLOW_THOUSAND | FILTER_FLAG_ALLOW_FRACTION | FILTER_FLAG_ALLOW_SCIENTIFIC));
+            $value = filter_var($value, FILTER_SANITIZE_NUMBER_FLOAT, array('flags' => FILTER_FLAG_ALLOW_THOUSAND | FILTER_FLAG_ALLOW_FRACTION | FILTER_FLAG_ALLOW_SCIENTIFIC));
         }
-        $value = str_replace(",", ".", $value);
+        $value = str_replace(',', '.', $value);
 
-        $validate = filter_var($value, FILTER_VALIDATE_FLOAT, array("flags" => FILTER_FLAG_ALLOW_THOUSAND | FILTER_FLAG_ALLOW_FRACTION | FILTER_FLAG_ALLOW_SCIENTIFIC));
+        $validate = filter_var($value, FILTER_VALIDATE_FLOAT, array('flags' => FILTER_FLAG_ALLOW_THOUSAND | FILTER_FLAG_ALLOW_FRACTION | FILTER_FLAG_ALLOW_SCIENTIFIC));
 
         if ($validate === false) {
-            $error[] = self::$errorMessage["invalidFloat"];
+            $error[] = self::$errorMessage['invalidFloat'];
 
             return $value;
         }
@@ -180,7 +180,7 @@ class Filter
     public static function filterBoolean($value, &$error, $nullable = false, $default = null)
     {
         if ($nullable === false && $value === null) {
-            $error[] = self::$errorMessage["notNullable"];
+            $error[] = self::$errorMessage['notNullable'];
         }
 
         $validate = filter_var($value, FILTER_VALIDATE_BOOLEAN, FILTER_NULL_ON_FAILURE);
@@ -194,7 +194,7 @@ class Filter
 
             return null;
         } else {
-            $error = $validate === null ? self::$errorMessage["invalidBoolean"] : array();
+            $error = $validate === null ? self::$errorMessage['invalidBoolean'] : array();
 
             return $value;
         }
@@ -207,7 +207,7 @@ class Filter
             $value = date_create($value);
 
             if ($value === false) {
-                $error[] = self::$errorMessage["invalidDate"];
+                $error[] = self::$errorMessage['invalidDate'];
 
                 return $value;
             }

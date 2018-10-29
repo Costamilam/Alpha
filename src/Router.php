@@ -8,7 +8,7 @@ class Router
 {
     private static $param = array();
 
-    private static $baseRoute = "";
+    private static $baseRoute = '';
 
     private static $instances = array();
 
@@ -46,7 +46,7 @@ class Router
 
         $group();
 
-        self::$baseRoute = "";
+        self::$baseRoute = '';
     }
 
     public static function set($method, $route, $callback, $option = array())
@@ -63,95 +63,94 @@ class Router
 
     public static function any($route, $callback, $option = array())
     {
-        return self::route("ANY", $route, $callback, $option);
+        return self::route('ANY', $route, $callback, $option);
     }
 
     public static function get($route, $callback, $option = array()) 
     {
-        return self::route("GET", $route, $callback, $option);
+        return self::route('GET', $route, $callback, $option);
     }
 
     public static function post($route, $callback, $option = array())
     {
-        return self::route("POST", $route, $callback, $option);
+        return self::route('POST', $route, $callback, $option);
     }
 
     public static function put($route, $callback, $option = array())
     {
-        return self::route("PUT", $route, $callback, $option);
+        return self::route('PUT', $route, $callback, $option);
     }
 
     public static function patch($route, $callback, $option = array())
     {
-        return self::route("PATCH", $route, $callback, $option);
+        return self::route('PATCH', $route, $callback, $option);
     }
 
     public static function delete($route, $callback, $option = array())
     {
-        return self::route("DELETE", $route, $callback, $option);
+        return self::route('DELETE', $route, $callback, $option);
     }
 
     public static function options($route, $callback, $option = array())
     {
-        return self::route("OPTIONS", $route, $callback, $option);
+        return self::route('OPTIONS', $route, $callback, $option);
     }
 
     public static function connect($route, $callback, $option = array())
     {
-        return self::route("CONNECT", $route, $callback, $option);
+        return self::route('CONNECT', $route, $callback, $option);
     }
 
     public static function trace($route, $callback, $option = array())
     {
-        return self::route("TRACE", $route, $callback, $option);
+        return self::route('TRACE', $route, $callback, $option);
     }
 
     private static function route($method, $route, $callback, $option = array())
     {
         $route = array(
-            "method" => $method,
-            "route" => $route,
-            "callback" => $callback,
-            "param" => isset($option["param"]) ? $option["param"] : array()
+            'route' => $route,
+            'callback' => $callback,
+            'param' => isset($option['param']) ? $option['param'] : array()
         );
 
-        if ($method === "ANY") {
-            $route["method"] = array(Request::method());
+        if ($method === 'ANY') {
+            $route['method'] = array(Request::method());
         } else {
             if (!is_array($method)) {
                 $method = array($method);
             }
 
-            $route["method"] = array_map(function ($method) {
+            $route['method'] = array_map(function ($method) {
                 return strtoupper($method);
             }, $method);
         }
         //$this->route = rtrim($route, "/");
 
-        preg_match_all("/\{([^\/]+)\}/", $route["route"], $match);
+        preg_match_all('/\{([^\/]+)\}/', $route['route'], $match);
 
-        $regexp = array_merge(array_fill_keys($match[1], "[^/]+"), self::$param, $route["param"]);
+        $regexp = array_merge(array_fill_keys($match[1], '[^/]+'), self::$param, $route['param']);
 
-        $route["param"] = array_filter($regexp, function ($key) use ($route) {
-            return strpos($route["route"], '{'.$key.'}') !== false;
+        $route['param'] = array_filter($regexp, function ($key) use ($route) {
+            return strpos($route['route'], '{'.$key.'}') !== false;
         }, ARRAY_FILTER_USE_KEY);
 
         $key = [];
-        $routeAux = $route["route"];
+        $routeAux = $route['route'];
 
-        foreach ($route["param"] as $name => $value) {
-            $key[strpos($route["route"], $name)] = $name;
+        foreach ($route['param'] as $name => $value) {
+            $key[strpos($route['route'], $name)] = $name;
 
-            $routeAux = str_replace('{'.$name.'}?/', "(?:($value)/)?", $routeAux);
-            $routeAux = str_replace('{'.$name.'}?', "($value)?", $routeAux);
-            $routeAux = str_replace('{'.$name.'}', "($value)", $routeAux);
+            $routeAux = str_replace('{'.$name.'}?/', '(?:('.$value.')/)?', $routeAux);
+            $routeAux = str_replace('{'.$name.'}?', '('.$value.')?', $routeAux);
+            $routeAux = str_replace('{'.$name.'}', '('.$value.')', $routeAux);
         }
 
-        $routeAux = str_replace("/", "\/", $routeAux);
-        $routeAux = "/^{$routeAux}$/";
+        $routeAux = str_replace('/', '\/', $routeAux);
+        $routeAux = '/^{'.$routeAux.'}$/';
 
         if(
-            !in_array(Request::method(), $route["method"])
+            !in_array(Request::method(), $route['method'])
             || !preg_match($routeAux, Request::path(), $match)
         ) {
             return;
@@ -167,8 +166,8 @@ class Router
 
         Request::setParam($match);
 
-        if (gettype($route["callback"]) === "string" && strpos($route["callback"], "->") !== false) {
-            $parse = explode("->", $route["callback"]);
+        if (gettype($route['callback']) === 'string' && strpos($route['callback'], '->') !== false) {
+            $parse = explode('->', $route['callback']);
 
             $object = array_filter(self::$instances, function ($name) use ($parse) {
                 return $name === $parse[0];
@@ -182,7 +181,7 @@ class Router
 
             $result = $object->{$parse[1]}(...self::$next);
         } else {
-            $result = call_user_func($route["callback"], ...self::$next);
+            $result = call_user_func($route['callback'], ...self::$next);
         }
 
         if ($result === true) {

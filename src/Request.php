@@ -12,24 +12,24 @@ class Request
 
     public static function load()
     {
-        self::$method = strtoupper($_SERVER["REQUEST_METHOD"]);
+        self::$method = strtoupper($_SERVER['REQUEST_METHOD']);
 
         //$route = preg_quote($route);
         //$route = rtrim($route, "/");
-        self::$path = str_replace($_SERVER["SCRIPT_NAME"], "", $_SERVER["REQUEST_URI"]);
+        self::$path = str_replace($_SERVER['SCRIPT_NAME'], '', $_SERVER['REQUEST_URI']);
 
-        if (isset($_SERVER["QUERY_STRING"])) {
-            self::$path = str_replace("?".$_SERVER["QUERY_STRING"], "", self::$path);
+        if (isset($_SERVER['QUERY_STRING'])) {
+            self::$path = str_replace('?'.$_SERVER['QUERY_STRING'], '', self::$path);
         }
 
         self::loadHeader();
 
-        $contentType = self::header("Content-Type");
-        $contentType = str_replace("/", "\/", $contentType);
-        if (preg_match("/$contentType/i", "application/json")) {
-            self::$body = json_decode(file_get_contents("php://input"), true);
+        $contentType = self::header('Content-Type');
+        $contentType = str_replace('/', '\/', $contentType);
+        if (preg_match('/'.$contentType.'/i', 'application/json')) {
+            self::$body = json_decode(file_get_contents('php://input'), true);
         } else {
-            parse_str(file_get_contents("php://input"), self::$body);
+            parse_str(file_get_contents('php://input'), self::$body);
         }
     }
 
@@ -72,14 +72,14 @@ class Request
 
     public static function cookie($name)
     {
-        $cookieHeader = self::header("Cookie");
+        $cookieHeader = self::header('Cookie');
 
         if ($cookieHeader === null) {
             return null;
         }
 
-        foreach (explode("; ", $cookieHeader) as $cookie) {
-            list($key, $value) = explode("=", $cookie);
+        foreach (explode('; ', $cookieHeader) as $cookie) {
+            list($key, $value) = explode('=', $cookie);
 
             if ($key === $name) {
                 return urldecode($value);

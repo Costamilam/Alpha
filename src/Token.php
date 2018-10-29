@@ -32,52 +32,52 @@ abstract class Token
         self::$audience = $audience;
         self::$expire = $expireInMinutes;
 
-        if (in_array($algorithm, array("hs256", "hs384", "hs512"))) {
+        if (in_array($algorithm, array('hs256', 'hs384', 'hs512'))) {
             self::$key = $key;
-        } elseif (in_array($algorithm, array("rs256", "rs384", "rs512", "es256", "es384", "es512"))) {
+        } elseif (in_array($algorithm, array('rs256', 'rs384', 'rs512', 'es256', 'es384', 'es512'))) {
             $keychain = new Signer\Keychain();
 
-            self::$key["public"] = $keychain->getPublicKey($key["public"]);
-            self::$key["private"] = $keychain->getPrivateKey($key["private"]);
+            self::$key['public'] = $keychain->getPublicKey($key['public']);
+            self::$key['private'] = $keychain->getPrivateKey($key['private']);
         }
     }
 
     protected static function create($subject, $data = null)
     {
         switch (strtolower(self::$algorithm)) {
-            case "hs256":
+            case 'hs256':
                 self::$signer = new Signer\Hmac\Sha256();
                 break;
 
-            case "hs384":
+            case 'hs384':
                 self::$signer = new Signer\Hmac\Sha384();
                 break;
 
-            case "hs512":
+            case 'hs512':
                 self::$signer = new Signer\Hmac\Sha512();
                 break;
 
-            case "rs256":
+            case 'rs256':
                 self::$signer = new Signer\Rsa\Sha256();
                 break;
 
-            case "rs384":
+            case 'rs384':
                 self::$signer = new Signer\Rsa\Sha384();
                 break;
 
-            case "rs512":
+            case 'rs512':
                 self::$signer = new Signer\Rsa\Sha512();
                 break;
 
-            case "es256":
+            case 'es256':
                 self::$signer = new Signer\Ecdsa\Sha256();
                 break;
 
-            case "es384":
+            case 'es384':
                 self::$signer = new Signer\Ecdsa\Sha384();
                 break;
 
-            case "es512":
+            case 'es512':
                 self::$signer = new Signer\Ecdsa\Sha512();
                 break;
         }
@@ -89,11 +89,11 @@ abstract class Token
             ->setNotBefore(time())
             ->setExpiration(time() + 60 * self::$expire)
             ->setSubject($subject)
-            ->set("data", $data)    
-            ->sign(self::$signer, is_array(self::$key) ? self::$key["private"] : self::$key)
+            ->set('data', $data)    
+            ->sign(self::$signer, is_array(self::$key) ? self::$key['private'] : self::$key)
             ->getToken();
 
-        self::executeCallback("created", $token->__toString());
+        self::executeCallback('created', $token->__toString());
 
         return $token;
     }
@@ -101,7 +101,7 @@ abstract class Token
     protected static function verify($token, $callback)
     {
         if ($token === null) {
-            self::executeCallback("empty");
+            self::executeCallback('empty');
 
             return false;
         }
@@ -109,7 +109,7 @@ abstract class Token
         try {
             $token = (new Parser())->parse($token);
         } catch (\Exception $exception) {
-            self::executeCallback("invalid");
+            self::executeCallback('invalid');
 
             return false;
         }
@@ -120,17 +120,17 @@ abstract class Token
 
         if ($token->validate($validator)) {
             if ($callback === null || is_callable($callback) && call_user_func($callback, self::getPayload($token)) === true) {
-                self::executeCallback("authorized", self::getPayload($token));
+                self::executeCallback('authorized', self::getPayload($token));
             } else {
-                self::executeCallback("forbidden", self::getPayload($token));
+                self::executeCallback('forbidden', self::getPayload($token));
             }
 
             return $token;
         } else {
             if ($token->isExpired()) {
-                self::executeCallback("expired", self::getPayload($token));
+                self::executeCallback('expired', self::getPayload($token));
             } else {
-                self::executeCallback("invalid");
+                self::executeCallback('invalid');
             }
 
             return false;
@@ -141,10 +141,10 @@ abstract class Token
     {
         if (is_array($status)) {
             foreach ($status as $value) {
-                self::$callback["$value"] = $callback;
+                self::$callback[$value] = $callback;
             }
         } else {
-            self::$callback["$status"] = $callback;
+            self::$callback[$status] = $callback;
         }
     }
 
@@ -156,14 +156,14 @@ abstract class Token
 
         self::$executed[] = $status;
 
-        if (isset(self::$callback["$status"]) && is_callable(self::$callback["$status"])) {
-            call_user_func(self::$callback["$status"], ...$param);
+        if (isset(self::$callback[$status]) && is_callable(self::$callback[$status])) {
+            call_user_func(self::$callback[$status], ...$param);
         } else {
             $response = array(
-                "empty" => 401,
-                "expired" => 401,
-                "invalid" => 401,
-                "forbidden" => 403
+                'empty' => 401,
+                'expired' => 401,
+                'invalid' => 401,
+                'forbidden' => 403
             );
 
             if (isset($response[$status])) {
@@ -177,12 +177,12 @@ abstract class Token
     private function getPayload($token) {
         $payload = array();
         $name = array(
-            "sub" => "subject",
-            "iss" => "issuer",
-            "aud" => "audience",
-            "iat" => "issuedAt",
-            "nbf" => "notBefore",
-            "exp" => "expiration"
+            'sub' => 'subject',
+            'iss' => 'issuer',
+            'aud' => 'audience',
+            'iat' => 'issuedAt',
+            'nbf' => 'notBefore',
+            'exp' => 'expiration'
         );
 
         foreach ($token->getClaims() as $object) {

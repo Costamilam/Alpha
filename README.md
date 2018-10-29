@@ -416,6 +416,9 @@ DB::access('host', 'user', 'pass', 'db');
 //Connection charset, recommended 'UTF8'
 DB::charset('UTF8');
 
+//For disconnect
+DB::disconnect();
+
 //Select example:
 DB::select('SELECT * FROM foobar WHERE foo LIKE "ba%"');
 //Return an associative array, for example:

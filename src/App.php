@@ -4,6 +4,7 @@ namespace Costamilam\Alpha;
 
 use Costamilam\Alpha\Request;
 use Costamilam\Alpha\Response;
+use Costamilam\Alpha\DB;
 
 class App
 {
@@ -34,6 +35,8 @@ class App
 
     public function __destruct()
     {
+        DB::close();
+
         exit;
     }
 }

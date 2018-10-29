@@ -1,4 +1,5 @@
 <?php
+
 namespace Costamilam\Alpha;
 
 class DB
@@ -55,6 +56,13 @@ class DB
         }
 
         return self::$connection;
+    }
+
+    public static function disconnect()
+    {
+        if (self::$connection) {
+            return self::$connection->close();
+        }
     }
 
     private static function execute($return, $query, ...$param)

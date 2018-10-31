@@ -109,24 +109,58 @@ class Router
     private static function route($method, $route, $callback, $option = array())
     {
         $route = array(
+            'method' => $method,
             'route' => $route,
             'callback' => $callback,
-            'param' => isset($option['param']) ? $option['param'] : array()
+            'param' => isset($option['param']) ? $option['param'] : array(),
+            'body' => isset($option['body']) ? $option['body'] : array()
         );
 
-        if ($method === 'ANY') {
+        $route = self::prepareMethod($route);
+
+        $route = self::prepareRoute($route);
+
+        if(
+            !in_array(Request::method(), $route['method'])
+            || !preg_match($route['route'], Request::path(), $match)
+            || !self::isValidBody($route)
+        ) {
+            echo "\n";
+            return;
+        }
+
+        array_shift($match);
+
+        while (count($match) < count($route['key'])) {
+            $match[] = null;
+        }
+
+        $match = array_combine($route['key'], $match);
+
+        Request::setParam($match);
+
+        self::executeCallback($route);
+    }
+
+    private static function prepareMethod($route)
+    {
+        if ($route['method'] === 'ANY') {
             $route['method'] = array(Request::method());
         } else {
-            if (!is_array($method)) {
-                $method = array($method);
+            if (!is_array($route['method'])) {
+                $route['method'] = array($route['method']);
             }
 
             $route['method'] = array_map(function ($method) {
                 return strtoupper($method);
-            }, $method);
+            }, $route['method']);
         }
-        //$this->route = rtrim($route, "/");
 
+        return $route;
+    }
+
+    private static function prepareRoute($route)
+    {
         preg_match_all('/\{([^\/]+)\}/', $route['route'], $match);
 
         $regexp = array_merge(array_fill_keys($match[1], '[^/]+'), self::$param, $route['param']);
@@ -135,47 +169,69 @@ class Router
             return strpos($route['route'], '{'.$key.'}') !== false;
         }, ARRAY_FILTER_USE_KEY);
 
-        $key = [];
-        $routeAux = $route['route'];
+        $route['key'] = [];
+
+        if (substr($route['route'], 0, 1) !== '/') {
+            $route['route'] = '/'.$route['route'];
+        }
+
+        $route['route'] = preg_replace('/([^\\\\])\\(([^\\/]*)\\)/', '$1(?:$2)', $route['route']);
 
         foreach ($route['param'] as $name => $value) {
-            $key[strpos($route['route'], $name)] = $name;
+            $route['key'][strpos($route['route'], $name)] = $name;
 
-            $routeAux = str_replace('{'.$name.'}?/', '(?:('.$value.')/)?', $routeAux);
-            $routeAux = str_replace('{'.$name.'}?', '('.$value.')?', $routeAux);
-            $routeAux = str_replace('{'.$name.'}', '('.$value.')', $routeAux);
+            $route['route'] = str_replace('{'.$name.'}?/', '(?:('.$value.')/)?', $route['route']);
+            $route['route'] = str_replace('{'.$name.'}?', '('.$value.')?', $route['route']);
+            $route['route'] = str_replace('{'.$name.'}', '('.$value.')', $route['route']);
         }
 
-        $routeAux = str_replace('/', '\/', $routeAux);
-        $routeAux = '/^{'.$routeAux.'}$/';
+        $route['route'] = str_replace('/', '\/', $route['route']);
+        $route['route'] = '/^'.$route['route'].'$/';
 
-        if(
-            !in_array(Request::method(), $route['method'])
-            || !preg_match($routeAux, Request::path(), $match)
-        ) {
-            return;
+        return $route;
+    }
+
+    private static function isValidBody($route)
+    {
+        if ($route['body'] === array()) {
+            return true;
         }
 
-        array_shift($match);
+        $body = Request::body();
 
-        while (count($match) < count($key)) {
-            $match[] = null;
+        foreach ($route['body'] as $key => $value) {
+            $opptionally = preg_match('/^[^\\\\]\\?$/', substr($key, -2));
+
+            if (substr($key, -3) === '\\\\?') {
+                $key = substr_replace($key, '\\', -3);
+            } elseif (substr($key, -2) === '\\?') {
+                $key = substr_replace($key, '?', -2);
+            } elseif (substr($key, -1) === '?') {
+                $key = substr_replace($key, '', -1);
+            }
+
+            if (!isset($body[$key]) && !$opptionally || isset($body[$key]) && !preg_match('/'.$value.'/', $body[$key])) {
+                return false;
+            }
         }
 
-        $match = array_combine($key, $match);
+        return true;
+    }
 
-        Request::setParam($match);
-
+    private static function executeCallback($route)
+    {
         if (gettype($route['callback']) === 'string' && strpos($route['callback'], '->') !== false) {
             $parse = explode('->', $route['callback']);
 
             $object = array_filter(self::$instances, function ($name) use ($parse) {
                 return $name === $parse[0];
             }, ARRAY_FILTER_USE_KEY);
+
             $object = array_shift($object);
 
             if ($object === null) {
                 $object = new $parse[0];
+
                 self::addInstance($parse[0], $object);
             }
 

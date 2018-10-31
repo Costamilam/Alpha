@@ -10,7 +10,7 @@ use Lcobucci\JWT\Signer;
 use Lcobucci\JWT\Parser;
 use Lcobucci\JWT\ValidationData;
 
-abstract class Token
+class Token
 {
     public static $currentToken;
     public static $regeneratedToken;

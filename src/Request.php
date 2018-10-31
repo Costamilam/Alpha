@@ -102,13 +102,7 @@ class Request
         if (count($index) === 0) {
             return self::$param;
         } else {
-            $data = array();
-
-            foreach ($index as $name) {
-                $data[$name] = isset(self::$param[$name]) ? self::$param[$name] : null;
-            }
-
-            return $data;
+            return self::getIndex(self::$param, $index);
         }
     }
 
@@ -117,13 +111,18 @@ class Request
         if (count($index) === 0) {
             return self::$body ?: array();
         } else {
-            $data = array();
-
-            foreach ($index as $name) {
-                $data[$name] = isset(self::$body[$name]) ? self::$body[$name] : null;
-            }
-
-            return $data;
+            return self::getIndex(self::$body, $index);
         }
+    }
+
+    private static function getIndex($array, $index)
+    {
+        $data = array();
+
+        foreach ($index as $name) {
+            $data[$name] = isset($array[$name]) ? $array[$name] : null;
+        }
+
+        return $data;
     }
 }

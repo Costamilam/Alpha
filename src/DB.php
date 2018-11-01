@@ -94,6 +94,14 @@ class DB
                     $type[] = 'b';
                     break;
 
+                case 'object':
+                    $parameter = 'Object';
+                    break;
+
+                case 'array':
+                    $parameter = 'Array';
+                    break;
+
                 default:
                     $type[] = null;
                     break;

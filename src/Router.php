@@ -2,7 +2,9 @@
 
 namespace Costamilam\Alpha;
 
+use Costamilam\Alpha\App;
 use Costamilam\Alpha\Request;
+use Costamilam\Alpha\Debugger;
 
 class Router
 {
@@ -108,7 +110,7 @@ class Router
 
     private static function route($method, $route, $callback, $option = array())
     {
-        $route = array(
+        $config = array(
             'method' => $method,
             'route' => $route,
             'callback' => $callback,
@@ -116,30 +118,34 @@ class Router
             'body' => isset($option['body']) ? $option['body'] : array()
         );
 
-        $route = self::prepareMethod($route);
+        $original = $config;
 
-        $route = self::prepareRoute($route);
+        $config = self::prepareMethod($config);
 
-        if(
-            !in_array(Request::method(), $route['method'])
-            || !preg_match($route['route'], Request::path(), $match)
-            || !self::isValidBody($route)
+        $config = self::prepareRoute($config);
+
+        if (
+            !in_array(Request::method(), $config['method'])
+            || !preg_match($config['route'], Request::path(), $match)
+            || !self::isValidBody($config)
         ) {
-            echo "\n";
+            Debugger::debugRoute($original, false);
             return;
         }
 
+        Debugger::debugRoute($original, true);
+
         array_shift($match);
 
-        while (count($match) < count($route['key'])) {
+        while (count($match) < count($config['key'])) {
             $match[] = null;
         }
 
-        $match = array_combine($route['key'], $match);
+        $match = array_combine($config['key'], $match);
 
         Request::setParam($match);
 
-        self::executeCallback($route);
+        self::executeCallback($config);
     }
 
     private static function prepareMethod($route)

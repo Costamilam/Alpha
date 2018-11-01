@@ -24,6 +24,8 @@ class Request
 
         self::loadHeader();
 
+        self::$param = array();
+
         $contentType = self::header('Content-Type');
         $contentType = str_replace('/', '\/', $contentType);
         if (preg_match('/'.$contentType.'/i', 'application/json')) {

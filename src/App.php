@@ -70,6 +70,8 @@ class App
 
     public function __destruct()
     {
+        Router::dispatch();
+
         Response::dispatch();
 
         DB::disconnect();

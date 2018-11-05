@@ -17,6 +17,8 @@ class Router extends Route
 
     private static $next = array();
 
+    private static $route = array();
+
     public static function addInstance($name, $object) {
         self::$instances[$name] = $object;
     }
@@ -52,9 +54,20 @@ class Router extends Route
         self::$baseRoute = '';
     }
 
+    public static function dispatch()
+    {
+        foreach (self::$route as $config) {
+            parent::execute($config);
+        }
+    }
+
     public static function set($method, $route, $callback, $option = array())
     {
-        parent::create($method, self::$baseRoute.$route, $callback, $option);
+        $route = parent::create($method, self::$baseRoute.$route, $callback, $option);
+
+        if ($route) {
+            self::$route[] = $route;
+        }
     }
 
     public static function any($route, $callback, $option = array())

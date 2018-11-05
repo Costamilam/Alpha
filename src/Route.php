@@ -35,7 +35,7 @@ class Route
             || !self::isValidBody($config)
         ) {
             Debugger::debugRoute($original, false);
-            return;
+            return false;
         }
 
         Debugger::debugRoute($original, true);
@@ -48,9 +48,9 @@ class Route
 
         $match = array_combine($config['key'], $match);
 
-        Request::setParam($match);
+        $config['match'] = $match;
 
-        self::executeCallback($config);
+        return $config;
     }
 
     private static function prepareMethod($route)
@@ -129,8 +129,12 @@ class Route
         return true;
     }
 
-    private static function executeCallback($route)
+    protected static function execute($route)
     {
+        Debugger::debugRoute($route, true);
+
+        Request::setParam($route['match']);
+
         if (gettype($route['callback']) === 'string' && strpos($route['callback'], '->') !== false) {
             $parse = explode('->', $route['callback']);
 

@@ -118,7 +118,7 @@ class Debugger
             PHP_EOL
             .PHP_EOL
             .PHP_EOL
-            .'ROUTE '.($executed ? '' : 'NOT').' EXECUTED'
+            .'ROUTE'.($executed ? '' : ' NOT').' EXECUTED'
             .PHP_EOL.
             print_r($route, true).
             'Parameters: '

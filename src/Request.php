@@ -4,6 +4,7 @@ namespace Costamilam\Alpha;
 
 class Request
 {
+    private static $time;
     private static $method;
     private static $header;
     private static $path;
@@ -12,6 +13,8 @@ class Request
 
     public static function load()
     {
+        self::$time = time();
+
         self::$method = strtoupper($_SERVER['REQUEST_METHOD']);
 
         //$route = preg_quote($route);
@@ -56,6 +59,11 @@ class Request
             }
             self::$header = $arh;
         }
+    }
+
+    public static function time()
+    {
+        return self::$time;
     }
 
     public static function method()

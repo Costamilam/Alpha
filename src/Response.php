@@ -2,9 +2,17 @@
 
 namespace Costamilam\Alpha;
 
+use Costamilam\Alpha\Request;
+
 class Response
 {
-    private static $cookie;
+    private static $header = array();
+
+    private static $body = array();
+
+    private static $lastResponseType = null;
+
+    private static $cookieConfig;
 
     public static function status($status)
     {
@@ -17,9 +25,9 @@ class Response
     {
         self::header('Content-Type', 'application/json; charset=utf-8');
 
-        ob_end_clean();
+        self::$body[] = json_encode($response);
 
-        echo json_encode($response);
+        self::$lastResponseType = 'json';
 
         return __CLASS__;
     }
@@ -28,19 +36,21 @@ class Response
     {
         self::header('Content-Type', 'text/*; charset=utf-8');
 
-        ob_end_clean();
+        self::$body[] = $response;
 
-        echo $response;
+        self::$lastResponseType = 'text';
 
         return __CLASS__;
     }
 
     public static function header($name, $value = null, $replace = true)
     {
-        if ($value !== null) {
-            header($name.': '.$value, $replace);
+        if ($value === null) {
+            if (isset(self::$header[$name])) {
+                unset(self::$header[$name]);
+            }
         } else {
-            header_remove($name);
+            self::$header[$name] = isset(self::$header[$name]) && !$replace ? array(self::$header[$name], $value) : $value;
         }
 
         return __CLASS__;
@@ -55,17 +65,25 @@ class Response
         return __CLASS__;
     }
 
-    public static function cache($seconds)
+    public static function cache($minutes, $lastModified = 'now')
     {
-        if ($seconds === false || $seconds === 0) {
-            header('Cache-Control: private, no-store, no-cache, must-revalidate, max-age=0, s-maxage=0');
-            header('Cache-Control: post-check=0, pre-check=0', false);
-            header('Pragma: no-cache');
-            header('Expires: 0');
-            header('Vary: *');
+        if ($minutes === false || $minutes === 0) {
+            self::multiHeader(array(
+                'Pragma'=> 'no-cache',
+                'Expires' => gmdate('D, d M Y H:i:s').' GMT',
+                'Vary' => '*',
+                'Cache-Control' => 'private, no-store, no-cache, must-revalidate, max-age=0, s-maxage=0'
+            ))
+            ::header('Cache-Control', 'post-check=0, pre-check=0', false);
         } else {
-            header('Cache-Control: public, max-age='.($seconds*60));
+            self::multiHeader(array(
+                'Expires' => gmdate('D, d M Y H:i:s', Request::time() + $minutes * 60) . ' GMT',
+                'Cache-Control' => 'public, max-age='.($minutes * 60),
+                'Pragma' => 'max-age='.($minutes * 60)
+            ));
         }
+
+        self::header('Last-Modified', gmdate('D, d M Y H:i:s', $lastModified !== 'now' ? $lastModified : Request::time()).' GMT');
 
         return __CLASS__;
     }
@@ -76,18 +94,43 @@ class Response
 
         $expireInMinutes = time() + 60 * $expireInMinutes;
 
-        self::$cookie['expire'] = $expireInMinutes;
-        self::$cookie['domain'] = $domain;
-        self::$cookie['secure'] = $secure;
-        self::$cookie['httponly'] = $httponly;
+        self::$cookieConfig['expire'] = $expireInMinutes;
+        self::$cookieConfig['domain'] = $domain;
+        self::$cookieConfig['secure'] = $secure;
+        self::$cookieConfig['httponly'] = $httponly;
     }
 
     public static function cookie($name, $value, $expireInMinutes = null)
     {
         //$value = json_encode($value);
 
-        $expireInMinutes = $expireInMinutes === null ? self::$cookie['expire'] : time() + 60 * $expireInMinutes;
+        $expireInMinutes = $expireInMinutes === null ? self::$cookieConfig['expire'] : time() + 60 * $expireInMinutes;
 
-        setcookie($name, urlencode($value), $expireInMinutes, '/', self::$cookie['domain'], self::$cookie['secure'], self::$cookie['httponly']);
+        setcookie($name, urlencode($value), $expireInMinutes, '/', self::$cookieConfig['domain'], self::$cookieConfig['secure'], self::$cookieConfig['httponly']);
+    }
+
+    public static function dispatch()
+    {
+        foreach (self::$header as $name => $value) {
+            if (!is_array($value)) {
+                $value = array($value);
+            }
+
+            foreach ($value as $header) {
+                header($name.': '.$header, true);
+            }
+        }
+
+        if (count(self::$body) === 1) {
+            echo self::$body[0];
+        } elseif (count(self::$body) > 1) {
+            if (self::$lastResponseType === 'json') {
+                echo json_encode(self::$body);
+            } else {
+                foreach (self::$body as $value) {
+                    echo $value;
+                }
+            }
+        }
     }
 }

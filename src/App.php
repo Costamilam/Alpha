@@ -70,6 +70,8 @@ class App
 
     public function __destruct()
     {
+        Response::dispatch();
+
         DB::disconnect();
 
         exit;

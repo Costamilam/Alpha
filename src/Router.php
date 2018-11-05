@@ -3,10 +3,11 @@
 namespace Costamilam\Alpha;
 
 use Costamilam\Alpha\App;
+use Costamilam\Alpha\Route;
 use Costamilam\Alpha\Request;
 use Costamilam\Alpha\Debugger;
 
-class Router
+class Router extends Route
 {
     private static $param = array();
 
@@ -53,205 +54,51 @@ class Router
 
     public static function set($method, $route, $callback, $option = array())
     {
-        /*if (is_array($method)) {
-            foreach ($method as $value) {
-                self::set($value, $route, $callback);
-            }
-        } else {
-            return new Route($method, self::$baseRoute.$route, $callback);
-        }*/
-        self::route($method, $route, $callback, $option);
+        parent::create($method, self::$baseRoute.$route, $callback, $option);
     }
 
     public static function any($route, $callback, $option = array())
     {
-        return self::route('ANY', $route, $callback, $option);
+        return self::set('ANY', $route, $callback, $option);
     }
 
     public static function get($route, $callback, $option = array()) 
     {
-        return self::route('GET', $route, $callback, $option);
+        return self::set('GET', $route, $callback, $option);
     }
 
     public static function post($route, $callback, $option = array())
     {
-        return self::route('POST', $route, $callback, $option);
+        return self::set('POST', $route, $callback, $option);
     }
 
     public static function put($route, $callback, $option = array())
     {
-        return self::route('PUT', $route, $callback, $option);
+        return self::set('PUT', $route, $callback, $option);
     }
 
     public static function patch($route, $callback, $option = array())
     {
-        return self::route('PATCH', $route, $callback, $option);
+        return self::set('PATCH', $route, $callback, $option);
     }
 
     public static function delete($route, $callback, $option = array())
     {
-        return self::route('DELETE', $route, $callback, $option);
+        return self::set('DELETE', $route, $callback, $option);
     }
 
     public static function options($route, $callback, $option = array())
     {
-        return self::route('OPTIONS', $route, $callback, $option);
+        return self::set('OPTIONS', $route, $callback, $option);
     }
 
     public static function connect($route, $callback, $option = array())
     {
-        return self::route('CONNECT', $route, $callback, $option);
+        return self::set('CONNECT', $route, $callback, $option);
     }
 
     public static function trace($route, $callback, $option = array())
     {
-        return self::route('TRACE', $route, $callback, $option);
-    }
-
-    private static function route($method, $route, $callback, $option = array())
-    {
-        $config = array(
-            'method' => $method,
-            'route' => $route,
-            'callback' => $callback,
-            'param' => isset($option['param']) ? $option['param'] : array(),
-            'body' => isset($option['body']) ? $option['body'] : array()
-        );
-
-        $original = $config;
-
-        $config = self::prepareMethod($config);
-
-        $config = self::prepareRoute($config);
-
-        if (
-            !in_array(Request::method(), $config['method'])
-            || !preg_match($config['route'], Request::path(), $match)
-            || !self::isValidBody($config)
-        ) {
-            Debugger::debugRoute($original, false);
-            return;
-        }
-
-        Debugger::debugRoute($original, true);
-
-        array_shift($match);
-
-        while (count($match) < count($config['key'])) {
-            $match[] = null;
-        }
-
-        $match = array_combine($config['key'], $match);
-
-        Request::setParam($match);
-
-        self::executeCallback($config);
-    }
-
-    private static function prepareMethod($route)
-    {
-        if ($route['method'] === 'ANY') {
-            $route['method'] = array(Request::method());
-        } else {
-            if (!is_array($route['method'])) {
-                $route['method'] = array($route['method']);
-            }
-
-            $route['method'] = array_map(function ($method) {
-                return strtoupper($method);
-            }, $route['method']);
-        }
-
-        return $route;
-    }
-
-    private static function prepareRoute($route)
-    {
-        preg_match_all('/\{([^\/]+)\}/', $route['route'], $match);
-
-        $regexp = array_merge(array_fill_keys($match[1], '[^/]+'), self::$param, $route['param']);
-
-        $route['param'] = array_filter($regexp, function ($key) use ($route) {
-            return strpos($route['route'], '{'.$key.'}') !== false;
-        }, ARRAY_FILTER_USE_KEY);
-
-        $route['key'] = [];
-
-        if (substr($route['route'], 0, 1) !== '/') {
-            $route['route'] = '/'.$route['route'];
-        }
-
-        $route['route'] = preg_replace('/([^\\\\])\\(([^\\/]*)\\)/', '$1(?:$2)', $route['route']);
-
-        foreach ($route['param'] as $name => $value) {
-            $route['key'][strpos($route['route'], $name)] = $name;
-
-            $route['route'] = str_replace('{'.$name.'}?/', '(?:('.$value.')/)?', $route['route']);
-            $route['route'] = str_replace('{'.$name.'}?', '('.$value.')?', $route['route']);
-            $route['route'] = str_replace('{'.$name.'}', '('.$value.')', $route['route']);
-        }
-
-        $route['route'] = str_replace('/', '\/', $route['route']);
-        $route['route'] = '/^'.$route['route'].'$/';
-
-        return $route;
-    }
-
-    private static function isValidBody($route)
-    {
-        if ($route['body'] === array()) {
-            return true;
-        }
-
-        $body = Request::body();
-
-        foreach ($route['body'] as $key => $value) {
-            $opptionally = preg_match('/^[^\\\\]\\?$/', substr($key, -2));
-
-            if (substr($key, -3) === '\\\\?') {
-                $key = substr_replace($key, '\\', -3);
-            } elseif (substr($key, -2) === '\\?') {
-                $key = substr_replace($key, '?', -2);
-            } elseif (substr($key, -1) === '?') {
-                $key = substr_replace($key, '', -1);
-            }
-
-            if (!isset($body[$key]) && !$opptionally || isset($body[$key]) && !preg_match('/'.$value.'/', $body[$key])) {
-                return false;
-            }
-        }
-
-        return true;
-    }
-
-    private static function executeCallback($route)
-    {
-        if (gettype($route['callback']) === 'string' && strpos($route['callback'], '->') !== false) {
-            $parse = explode('->', $route['callback']);
-
-            $object = array_filter(self::$instances, function ($name) use ($parse) {
-                return $name === $parse[0];
-            }, ARRAY_FILTER_USE_KEY);
-
-            $object = array_shift($object);
-
-            if ($object === null) {
-                $object = new $parse[0];
-
-                self::addInstance($parse[0], $object);
-            }
-
-            $result = $object->{$parse[1]}(...self::$next);
-        } else {
-            $result = call_user_func($route['callback'], ...self::$next);
-        }
-
-        if ($result === true) {
-            self::$next = array();
-        } elseif (is_array($result)) {
-            self::$next = $result;
-        } else {
-            App::finish();
-        }
+        return self::set('TRACE', $route, $callback, $option);
     }
 }

@@ -2,10 +2,13 @@
 
 namespace Costamilam\Alpha;
 
+use Costamilam\Alpha\App;
 use Costamilam\Alpha\Request;
 
 class Response
 {
+    private static $responseCode;
+
     private static $header = array();
 
     private static $body = array();
@@ -16,7 +19,7 @@ class Response
 
     public static function status($status)
     {
-        http_response_code($status);
+        self::$responseCode = $status;
 
         return __CLASS__;
     }
@@ -77,13 +80,13 @@ class Response
             ::header('Cache-Control', 'post-check=0, pre-check=0', false);
         } else {
             self::multiHeader(array(
-                'Expires' => gmdate('D, d M Y H:i:s', Request::time() + $minutes * 60) . ' GMT',
+                'Expires' => gmdate('D, d M Y H:i:s', App::startedAt() + $minutes * 60) . ' GMT',
                 'Cache-Control' => 'public, max-age='.($minutes * 60),
                 'Pragma' => 'max-age='.($minutes * 60)
             ));
         }
 
-        self::header('Last-Modified', gmdate('D, d M Y H:i:s', $lastModified !== 'now' ? $lastModified : Request::time()).' GMT');
+        self::header('Last-Modified', gmdate('D, d M Y H:i:s', $lastModified !== 'now' ? $lastModified : App::startedAt()).' GMT');
 
         return __CLASS__;
     }
@@ -111,6 +114,10 @@ class Response
 
     public static function dispatch()
     {
+        if (self::$responseCode !== null) {
+            http_response_code(self::$responseCode);
+        }
+
         foreach (self::$header as $name => $value) {
             if (!is_array($value)) {
                 $value = array($value);

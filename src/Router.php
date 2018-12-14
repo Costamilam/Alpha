@@ -9,8 +9,6 @@ use Costamilam\Alpha\Debugger;
 
 class Router extends Route
 {
-    private static $param = array();
-
     private static $baseRoute = '';
 
     private static $instances = array();
@@ -29,20 +27,6 @@ class Router extends Route
                 return $value;
             }
         }
-    }
-
-    public static function addParamRegExp($regexp)
-    {
-        foreach ($regexp as $name => $value) {
-            self::$param[$name] = $value;
-        }
-
-        return __CLASS__;
-    }
-
-    public static function getParamRegExp()
-    {
-        return self::$param;
     }
 
     public static function path($baseRoute, $group) 
@@ -65,7 +49,7 @@ class Router extends Route
     {
         $route = parent::create($method, self::$baseRoute.$route, $callback, $option);
 
-        if ($route) {
+        if ($route !== false) {
             self::$route[] = $route;
         }
     }

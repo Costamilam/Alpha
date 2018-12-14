@@ -21,11 +21,35 @@ class DB
             'password' => $password,
             'database' => $database
         );
+
+        return __CLASS__;
     }
 
     public static function charset($charset)
     {
         self::$charset = $charset;
+
+        return __CLASS__;
+    }
+
+    private static function connect()
+    {
+        if (!self::$connection) {
+            self::$connection = new \mysqli(...self::$access);
+
+            if (self::$charset) {
+                self::$connection->set_charset(self::$charset);
+            }
+        }
+
+        return self::$connection;
+    }
+
+    public static function disconnect()
+    {
+        if (self::$connection) {
+            self::$connection->close();
+        }
     }
 
     private static function format($query)
@@ -45,27 +69,17 @@ class DB
         return $formattedQuery[0];
     }
 
-    private static function connect()
-    {
-        if (!self::$connection) {
-            self::$connection = new \mysqli(self::$access['host'], self::$access['username'], self::$access['password'], self::$access['database']);
+    private static function multiQuery($type, $query, $param) {
+        $results = array();
 
-            if (self::$charset) {
-                self::$connection->set_charset(self::$charset);
-            }
+        foreach ($query as $sql) {
+            $results[] = self::{$type}($sql, ...$param);
         }
 
-        return self::$connection;
+        return $results;
     }
 
-    public static function disconnect()
-    {
-        if (self::$connection) {
-            return self::$connection->close();
-        }
-    }
-
-    private static function execute($return, $query, ...$param)
+    private static function execute($query, $param, $returnStatement = false)
     {
         $type = array();
         $blob = array();
@@ -95,15 +109,13 @@ class DB
                     break;
 
                 case 'object':
-                    $parameter = 'Object';
+                    $type[] = 's';
+                    $parameter = json_encode($parameter);
                     break;
 
                 case 'array':
-                    $parameter = 'Array';
-                    break;
-
-                default:
-                    $type[] = null;
+                    $type[] = 's';
+                    $parameter = json_encode($parameter);
                     break;
             }
         }
@@ -111,7 +123,7 @@ class DB
         $statement = self::connect()->prepare($query);
 
         if (!empty($type)) {
-            $statement->bind_param(implode('', $type), ...$param);
+            $statement->bind_param(implode('', $type), $param);
         }
 
         foreach ($blob as $index => $data) {
@@ -120,18 +132,22 @@ class DB
 
         $execute = $statement->execute();
 
-        return $return ? $statement : $execute;
+        return $returnStatement ? $statement : $execute;
     }
 
     public static function insert($query, ...$param)
     {
+        if (is_array($query)) {
+            return self::multiQuery('insert', $query, $param);
+        }
+
         $query = self::format($query);
 
         if (stripos($query, 'insert') !== 0) {
             return false;
         }
 
-        $execute = self::execute(false, $query, ...$param);
+        $execute = self::execute($query, $param);
 
         self::$insertedId = self::$connection->insert_id;
 
@@ -140,35 +156,47 @@ class DB
 
     public static function update($query, ...$param)
     {
+        if (is_array($query)) {
+            return self::multiQuery('update', $query, $param);
+        }
+
         $query = self::format($query);
 
         if (stripos($query, 'update') !== 0) {
             return false;
         }
 
-        return self::execute(false, $query, ...$param);
+        return self::execute($query, $param);
     }
 
     public static function delete($query, ...$param)
     {
+        if (is_array($query)) {
+            return self::multiQuery('delete', $query, $param);
+        }
+
         $query = self::format($query);
 
         if (stripos($query, 'delete') !== 0) {
             return false;
         }
 
-        return self::execute(false, $query, ...$param);
+        return self::execute($query, $param);
     }
 
     public static function select($query, ...$param)
     {
+        if (is_array($query)) {
+            return self::multiQuery('select', $query, $param);
+        }
+
         $query = self::format($query);
 
         if (stripos($query, 'select') !== 0) {
             return false;
         }
 
-        $statement = self::execute(true, $query, ...$param);
+        $statement = self::execute($query, $param, true);
 
         return self::fetch($statement);
     }

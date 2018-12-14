@@ -2,16 +2,19 @@
 
 namespace Costamilam\Alpha;
 
+use Costamilam\Alpha\DB;
+use Costamilam\Alpha\Router;
 use Costamilam\Alpha\Request;
 use Costamilam\Alpha\Response;
-use Costamilam\Alpha\DB;
-use Costamilam\Alpha\Debugger;
+use Costamilam\Alpha\Debugger\Logger;
 
 class App
 {
     private static $instance = null;
 
     private static $mode = null;
+
+    public static $startedAt;
 
     public static function isDevMode()
     {
@@ -31,10 +34,15 @@ class App
         return !self::$mode;
     }
 
-    public static function start($mode = "dev", $loggerPath = __DIR__.'/logs/')
+    public static function startedAt()
+    {
+        return self::$startedAt;
+    }
+
+    public static function start($mode = 'dev')
     {
         if (self::$instance === null) {
-            self::$instance = new App($mode, $loggerPath);
+            self::$instance = new App($mode);
         } else {
             Debugger::error('applicationAlreadyStartedOnStartApplication');
         }
@@ -49,8 +57,10 @@ class App
         }
     }
 
-    private function __construct($mode, $loggerPath)
+    private function __construct($mode)
     {
+        self::$startedAt = date('Y-m-d-H:i:s');
+
         ob_start();
 
         if (strcasecmp($mode, 'dev') == 0) {
@@ -64,8 +74,6 @@ class App
         Request::load();
 
         Response::configureCookie(30, '', false, true);
-
-        Debugger::start($loggerPath);
     }
 
     public function __destruct()

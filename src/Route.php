@@ -5,13 +5,33 @@ namespace Costamilam\Alpha;
 use Costamilam\Alpha\App;
 use Costamilam\Alpha\Router;
 use Costamilam\Alpha\Request;
-use Costamilam\Alpha\Debugger;
+use Costamilam\Alpha\Debugger\Logger;
 
 class Route
 {
     private static $param = array();
 
+    private static $bodyParam = array();
+
     private static $next = array();
+
+    public static function addParamValidator($regexp)
+    {
+        foreach ($regexp as $name => $value) {
+            self::$param[$name] = $value;
+        }
+
+        return __CLASS__;
+    }
+
+    public static function addBodyParamValidator($regexp)
+    {
+        foreach ($regexp as $name => $value) {
+            self::$bodyParam[$name] = $value;
+        }
+
+        return __CLASS__;
+    }
 
     protected static function create($method, $route, $callback, $option = array())
     {
@@ -25,20 +45,20 @@ class Route
 
         $original = $config;
 
-        $config = self::prepareMethod($config);
+        self::prepareMethod($config);
 
-        $config = self::prepareRoute($config);
+        self::prepareRoute($config);
 
         if (
             !in_array(Request::method(), $config['method'])
             || !preg_match($config['route'], Request::path(), $match)
             || !self::isValidBody($config)
         ) {
-            Debugger::debugRoute($original, false);
+            Debugger::logRoute($original, false);
             return false;
         }
 
-        Debugger::debugRoute($original, true);
+        Debugger::logRoute($original, true);
 
         array_shift($match);
 
@@ -53,7 +73,7 @@ class Route
         return $config;
     }
 
-    private static function prepareMethod($route)
+    private static function prepareMethod(&$route)
     {
         if ($route['method'] === 'ANY') {
             $route['method'] = array(Request::method());
@@ -70,7 +90,7 @@ class Route
         return $route;
     }
 
-    private static function prepareRoute($route)
+    private static function prepareRoute(&$route)
     {
         preg_match_all('/\{([^\/]+)\}/', $route['route'], $match);
 
@@ -104,7 +124,9 @@ class Route
 
     private static function isValidBody($route)
     {
-        if ($route['body'] === array()) {
+        $body = array_merge(self::$bodyParam, $route['body']);
+
+        if (empty($route['body'])) {
             return true;
         }
 
@@ -121,7 +143,16 @@ class Route
                 $key = substr_replace($key, '', -1);
             }
 
-            if (!isset($body[$key]) && !$opptionally || isset($body[$key]) && !preg_match('/'.$value.'/', $body[$key])) {
+            if (
+                !isset($body[$key]) &&
+                !$opptionally ||
+                isset($body[$key]) &&
+                (
+                    is_callable($value) &&
+                    call_user_func($value, $body[$key]) !== true ||
+                    !preg_match('/'.$value.'/', $body[$key])
+                )
+            ) {
                 return false;
             }
         }
@@ -131,7 +162,7 @@ class Route
 
     protected static function execute($route)
     {
-        Debugger::debugRoute($route, true);
+        Debugger::logRoute($route, true);
 
         Request::setParam($route['match']);
 

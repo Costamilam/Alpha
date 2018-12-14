@@ -19,7 +19,7 @@ class App
     public static function isDevMode()
     {
         if (self::$mode === null) {
-            Debugger::error('applicationNotYetStartedOnVerifyIfIsInDevMode');
+            Logger::error('applicationNotYetStartedOnVerifyIfIsInDevMode');
         }
 
         return self::$mode;
@@ -28,7 +28,7 @@ class App
     public static function isProdMode()
     {
         if (self::$mode === null) {
-            Debugger::error('applicationNotYetStartedOnVerifyIfIsInProdMode');
+            Logger::error('applicationNotYetStartedOnVerifyIfIsInProdMode');
         }
 
         return !self::$mode;
@@ -44,7 +44,7 @@ class App
         if (self::$instance === null) {
             self::$instance = new App($mode);
         } else {
-            Debugger::error('applicationAlreadyStartedOnStartApplication');
+            Logger::error('applicationAlreadyStartedOnStartApplication');
         }
     }
 
@@ -53,7 +53,7 @@ class App
         if (self::$instance !== null) {
             self::$instance->__destruct();
         } else {
-            Debugger::error('applicationNotYetStartedOnFinishExecution');
+            Logger::error('applicationNotYetStartedOnFinishExecution');
         }
     }
 
@@ -68,7 +68,7 @@ class App
         } elseif (strcasecmp($mode, 'prod') == 0) {
             self::$mode = false;
         } else {
-            Debugger::error('invalidModeValueOnStartApplication');
+            Logger::error('invalidModeValueOnStartApplication');
         }
 
         Request::load();

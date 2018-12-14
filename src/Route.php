@@ -54,11 +54,11 @@ class Route
             || !preg_match($config['route'], Request::path(), $match)
             || !self::isValidBody($config)
         ) {
-            Debugger::logRoute($original, false);
+            Logger::logRoute($original, false);
             return false;
         }
 
-        Debugger::logRoute($original, true);
+        Logger::logRoute($original, true);
 
         array_shift($match);
 
@@ -162,7 +162,7 @@ class Route
 
     protected static function execute($route)
     {
-        Debugger::logRoute($route, true);
+        Logger::logRoute($route, true);
 
         Request::setParam($route['match']);
 

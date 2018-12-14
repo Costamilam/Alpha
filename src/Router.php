@@ -5,7 +5,6 @@ namespace Costamilam\Alpha;
 use Costamilam\Alpha\App;
 use Costamilam\Alpha\Route;
 use Costamilam\Alpha\Request;
-use Costamilam\Alpha\Debugger;
 
 class Router extends Route
 {

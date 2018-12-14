@@ -37,8 +37,8 @@ class Token
         } elseif (in_array($algorithm, array('rs256', 'rs384', 'rs512', 'es256', 'es384', 'es512'))) {
             $keychain = new Signer\Keychain();
 
-            self::$key['public'] = $keychain->getPublicKey($key['public']);
-            self::$key['private'] = $keychain->getPrivateKey($key['private']);
+            self::$key['public'] = is_file($key['public']) ? $keychain->getPublicKey($key['public']) : $key['public'];
+            self::$key['private'] = is_file($key['private']) ? $keychain->getPublicKey($key['private']) : $key['private'];
         }
     }
 
@@ -119,7 +119,11 @@ class Token
         $validator->setAudience(self::$audience);
 
         if ($token->validate($validator)) {
-            if ($callback === null || is_callable($callback) && call_user_func($callback, self::getPayload($token)) === true) {
+            if (
+                $callback === null ||
+                is_callable($callback) &&
+                call_user_func($callback, self::getPayload($token)) === true
+            ) {
                 self::executeCallback('authorized', self::getPayload($token));
             } else {
                 self::executeCallback('forbidden', self::getPayload($token));

@@ -1,6 +1,6 @@
 <?php
 
-namespace Costamilam\Alpha;
+namespace Costamilam\Alpha\Debugger;
 
 use Costamilam\Alpha\Response;
 
@@ -12,7 +12,7 @@ class Exception extends \Exception
 
     public function __construct($type)
     {
-        $this->errorData($type);
+        $this->loadErrorData($type);
 
         parent::__construct($this->error['messsage']);
 
@@ -20,7 +20,7 @@ class Exception extends \Exception
         array_shift($this->trace);
     }
 
-    private function errorData($type)
+    private function loadErrorData($type)
     {
         $data = json_decode(file_get_contents(__DIR__.'/exception.json'), true);
 
@@ -38,12 +38,12 @@ class Exception extends \Exception
     private static function getArgument($argument)
     {
         foreach ($argument as &$arg) {
-            switch (gettype($arg)) {
+            switch (strtolower(gettype($arg))) {
                 case 'boolean':
                     $arg = $arg ? 'true' : 'false';
                     break;
 
-                case 'NULL':
+                case 'null':
                     $arg = 'null';
                     break;
 

@@ -17,8 +17,6 @@ class Logger
     public static $debuged = false;
 
     public static function start($path, $overwrite = true) {
-        self::$started = true;
-
         if (substr($path, -1) !== '/') {
             $path .= '/';
         }
@@ -47,6 +45,8 @@ class Logger
                 'body' => Request::body()
             ));
         }
+
+        self::$started = true;
     }
 
     public static function error($type)

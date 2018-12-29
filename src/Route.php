@@ -100,7 +100,7 @@ class Route
             return strpos($route['route'], '{'.$key.'}') !== false;
         }, ARRAY_FILTER_USE_KEY);
 
-        $route['key'] = [];
+        $route['key'] = array();
 
         if (substr($route['route'], 0, 1) !== '/') {
             $route['route'] = '/'.$route['route'];
@@ -187,7 +187,7 @@ class Route
         } elseif (is_array($result)) {
             self::$next = $result;
         } else {
-            App::finish();
+            return false;
         }
     }
 }

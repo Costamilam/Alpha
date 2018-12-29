@@ -40,7 +40,9 @@ class Router extends Route
     public static function dispatch()
     {
         foreach (self::$route as $config) {
-            parent::execute($config);
+            if (parent::execute($config) === false) {
+                break;
+            }
         }
     }
 

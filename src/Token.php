@@ -129,7 +129,7 @@ class Token
                 self::executeCallback('forbidden', self::getPayload($token));
             }
 
-            return $token;
+            return true;
         } else {
             if ($token->isExpired()) {
                 self::executeCallback('expired', self::getPayload($token));
@@ -172,8 +172,6 @@ class Token
 
             if (isset($response[$status])) {
                 Response::status($response[$status]);
-
-                App::finish();
             }
         }
     }

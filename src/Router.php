@@ -21,11 +21,7 @@ class Router extends Route
     }
 
     public static function getInstance($name) {
-        foreach (self::$instances as $key => $value) {
-            if ($name === $key) {
-                return $value;
-            }
-        }
+        return self::$instances[$name];
     }
 
     public static function path($baseRoute, $group) 
@@ -40,7 +36,7 @@ class Router extends Route
     public static function dispatch()
     {
         foreach (self::$route as $config) {
-            if (parent::execute($config) === false) {
+            if (parent::call($config) === false) {
                 break;
             }
         }
@@ -48,11 +44,13 @@ class Router extends Route
 
     public static function set($method, $route, $callback, $option = array())
     {
-        $route = parent::create($method, self::$baseRoute.$route, $callback, $option);
-
-        if ($route !== false) {
-            self::$route[] = $route;
-        }
+        self::$route[] = array(
+            'method' => $method,
+            'route' => $route,
+            'callback' => $callback,
+            'param' => isset($option['param']) ? $option['param'] : array(),
+            'body' => isset($option['body']) ? $option['body'] : array()
+        );
     }
 
     public static function any($route, $callback, $option = array())

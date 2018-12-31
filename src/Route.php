@@ -13,7 +13,7 @@ class Route
 
     private static $bodyParam = array();
 
-    private static $next = array();
+    private static $next = null;
 
     public static function addParamValidator($regexp)
     {
@@ -33,21 +33,18 @@ class Route
         return __CLASS__;
     }
 
-    protected static function create($method, $route, $callback, $option = array())
+    public static function next(...$argument)
     {
-        $config = array(
-            'method' => $method,
-            'route' => $route,
-            'callback' => $callback,
-            'param' => isset($option['param']) ? $option['param'] : array(),
-            'body' => isset($option['body']) ? $option['body'] : array()
-        );
+        self::$next = $argument;
+    }
 
+    protected static function call($config)
+    {
         $original = $config;
 
         self::prepareMethod($config);
 
-        self::prepareRoute($config);
+        self::preparePath($config);
 
         if (
             !in_array(Request::method(), $config['method'])
@@ -70,7 +67,7 @@ class Route
 
         $config['match'] = $match;
 
-        return $config;
+        return self::execute($config);
     }
 
     private static function prepareMethod(&$route)
@@ -90,7 +87,7 @@ class Route
         return $route;
     }
 
-    private static function prepareRoute(&$route)
+    private static function preparePath(&$route)
     {
         preg_match_all('/\{([^\/]+)\}/', $route['route'], $match);
 
@@ -162,6 +159,10 @@ class Route
 
     protected static function execute($route)
     {
+        $argument = self::$next ?: array();
+
+        self::$next = null;
+
         Logger::logRoute($route, true);
 
         Request::setParam($route['match']);
@@ -177,16 +178,12 @@ class Route
                 Router::addInstance($parse[0], $object);
             }
 
-            $result = $object->{$parse[1]}(...self::$next);
+            $object->{$parse[1]}(...$argument);
         } else {
-            $result = call_user_func($route['callback'], ...self::$next);
+            call_user_func($route['callback'], ...$argument);
         }
 
-        if ($result === true) {
-            self::$next = array();
-        } elseif (is_array($result)) {
-            self::$next = $result;
-        } else {
+        if (self::$next === null) {
             return false;
         }
     }

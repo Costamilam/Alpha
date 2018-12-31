@@ -9,7 +9,10 @@ use Costamilam\Alpha\Response;
 class Auth extends Token
 {
     private static $httpHeader = true;
+
     private static $cookie = false;
+
+    private static $route = array();
 
     public static function configureToken($algorithm, $key, $issuer, $audience, $expireInMinutes)
     {
@@ -35,15 +38,29 @@ class Auth extends Token
 
     public static function route($method, $route, $callback = null)
     {
-        if (
-            (
-                strtoupper($method) === 'ANY' ||
-                strtoupper($method) === Request::method()
-            ) &&
-            preg_match('/^'.str_replace('/', '\/', $route).'$/', Request::path())
-        ) {
-            parent::verify(self::getToken(), $callback);
+        self::$route[] = array(
+            'method' => $method,
+            'route' => $route,
+            'callback' => $callback
+        );
+    }
+
+    public static function dispatch()
+    {
+        foreach (self::$route as $route) {
+            if (
+                (
+                    strtoupper($route['method']) === 'ANY' ||
+                    strtoupper($route['method']) === Request::method()
+                ) &&
+                preg_match('/^'.str_replace('/', '\/', $route['route']).'$/', Request::path()) &&
+                parent::verify(self::getToken(), $route['callback']) === false
+            ) {
+                return false;
+            }
         }
+
+        return true;
     }
 
     public static function createToken($subject, $data = null)

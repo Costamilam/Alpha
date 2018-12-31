@@ -3,6 +3,7 @@
 namespace Costamilam\Alpha;
 
 use Costamilam\Alpha\DB;
+use Costamilam\Alpha\Auth;
 use Costamilam\Alpha\Router;
 use Costamilam\Alpha\Request;
 use Costamilam\Alpha\Response;
@@ -48,15 +49,6 @@ class App
         }
     }
 
-    public static function finish()
-    {
-        if (self::$instance !== null) {
-            self::$instance->__destruct();
-        } else {
-            Logger::error('applicationNotYetStartedOnFinishExecution');
-        }
-    }
-
     private function __construct($mode)
     {
         self::$startedAt = date('Y-m-d-H:i:s');
@@ -78,11 +70,13 @@ class App
 
     public function __destruct()
     {
-        Router::dispatch();
-
-        Response::dispatch();
+        if (Auth::dispatch() === true) {
+            Router::dispatch();
+        }
 
         DB::disconnect();
+
+        Response::dispatch();
 
         exit;
     }

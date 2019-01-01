@@ -48,24 +48,15 @@ class Route
 
         if (
             !in_array(Request::method(), $config['method'])
-            || !preg_match($config['route'], Request::path(), $match)
+            || $config['match'] === null
             || !self::isValidBody($config)
         ) {
             Logger::logRoute($original, false);
+
             return false;
         }
 
         Logger::logRoute($original, true);
-
-        array_shift($match);
-
-        while (count($match) < count($config['key'])) {
-            $match[] = null;
-        }
-
-        $match = array_combine($config['key'], $match);
-
-        $config['match'] = $match;
 
         return self::execute($config);
     }
@@ -105,7 +96,15 @@ class Route
 
         $route['route'] = preg_replace('/([^\\\\])\\(([^\\/]*)\\)/', '$1(?:$2)', $route['route']);
 
+        $paramFunction = array();
+
         foreach ($route['param'] as $name => $value) {
+            if (is_callable($value)) {
+                $paramFunction[$name] = $value;
+
+                $value = '[^/]+';
+            }
+
             $route['key'][strpos($route['route'], $name)] = $name;
 
             $route['route'] = str_replace('{'.$name.'}?/', '(?:('.$value.')/)?', $route['route']);
@@ -115,6 +114,30 @@ class Route
 
         $route['route'] = str_replace('/', '\/', $route['route']);
         $route['route'] = '/^'.$route['route'].'$/';
+
+        if (preg_match($route['route'], Request::path(), $match) === 0) {
+            $route['match'] = null;
+
+            return $route;
+        }
+
+        array_shift($match);
+
+        while (count($match) < count($route['key'])) {
+            $match[] = null;
+        }
+
+        $match = array_combine($route['key'], $match);
+
+        $route['match'] = $match;
+
+        foreach ($paramFunction as $name => $callback) {
+            if (!call_user_func($callback, $route['match'][$name])) {
+                $route['match'] = null;
+    
+                return $route;
+            }
+        }
 
         return $route;
     }

@@ -13,8 +13,6 @@ class Response
 
     private static $body = array();
 
-    private static $lastResponseType = null;
-
     private static $cookieConfig;
 
     public static function status($status)
@@ -28,20 +26,7 @@ class Response
     {
         self::header('Content-Type', 'application/json; charset=utf-8');
 
-        self::$body[] = json_encode($response);
-
-        self::$lastResponseType = 'json';
-
-        return __CLASS__;
-    }
-
-    public static function text($response)
-    {
-        self::header('Content-Type', 'text/*; charset=utf-8');
-
-        self::$body[] = $response;
-
-        self::$lastResponseType = 'text';
+        self::$body = json_encode($response);
 
         return __CLASS__;
     }
@@ -128,16 +113,6 @@ class Response
             }
         }
 
-        if (count(self::$body) === 1) {
-            echo self::$body[0];
-        } elseif (count(self::$body) > 1) {
-            if (self::$lastResponseType === 'json') {
-                echo json_encode(self::$body);
-            } else {
-                foreach (self::$body as $value) {
-                    echo $value;
-                }
-            }
-        }
+        echo self::$body;
     }
 }

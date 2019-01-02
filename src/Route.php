@@ -15,7 +15,7 @@ class Route
 
     private static $next = null;
 
-    public static function addParamValidator($regexp)
+    public static function addPathParamValidator($validator)
     {
         foreach ($regexp as $name => $value) {
             self::$param[$name] = $value;
@@ -24,7 +24,7 @@ class Route
         return __CLASS__;
     }
 
-    public static function addBodyParamValidator($regexp)
+    public static function addBodyParamValidator($validator)
     {
         foreach ($regexp as $name => $value) {
             self::$bodyParam[$name] = $value;

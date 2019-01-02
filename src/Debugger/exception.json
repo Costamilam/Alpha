@@ -14,11 +14,6 @@
         "option": null,
         "observation": ""
     },
-    "applicationNotYetStartedOnFinishExecution": {
-        "messsage": "You can not finish execution before starting the application",
-        "option": null,
-        "observation": "When you run 'App::finish' if the database connection is open, it will be closed and after the execution will be finished"
-    },
     "applicationNotYetStartedOnVerifyIfIsInDevMode": {
         "messsage": "You can not verify that you are in development mode before you start the application",
         "option": null,

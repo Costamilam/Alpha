@@ -36,9 +36,6 @@ use Costamilam\Alpha\App;
 
 //Start aplication
 App::start();
-
-//To finish execution
-App::finish();
 ```
 
 **Routing:**
@@ -46,10 +43,23 @@ App::finish();
 ```php
 //Import the necessary classes
 use Costamilam\Alpha\Router;
-use Costamilam\Alpha\Request;
 
-//Define default RegExp for all parameters 'bar'
-Router::addParamRegExp('bar', '[0-9]*');
+//Define default RegExp or function to validate all path parameters 'bar'
+Router::addParamValidator('foo', '[0-9]*');
+
+//Define default RegExp or function to validate all body parameters 'bar'
+Router::addBodyParamValidator('bar', function($param) {
+    return $param === 'bar';
+});
+
+//The callback function recive a parameter and has return if it is valid, you can receive the parameter as a reference (&$param) to format and validate
+
+//Define default RegExp or function to validate all body parameters 'bar'
+Router::addBodyParamValidator('baz', function(&$param) {
+    $param = strtoupper($param);
+
+    return $param === 'BAZ';
+});
 
 //Create a route by defining the method, route, and callback
 Router::set('GET', '/my/route/', function () {
@@ -64,7 +74,7 @@ Router::set(array('GET', 'POST'), '/my/route/', function () {
 
 | Method | Function | Description |
 |-|-|-|
-| All | `Router::any` | Any HTTP method |
+| Any | `Router::any` | Any HTTP method |
 | GET | `Router::get` | GET HTTP method |
 | POST | `Router::post` | POST HTTP method |
 | PUT | `Router::put` | PUT HTTP method |
@@ -81,7 +91,7 @@ Router::get('/{foo}/', function () {
 	//Get parameters
 	$listOfParams = Request::param();
 }, array(
-	//Optionally, define the RegExp to param, if you don't use, the default is '[^\/]+'
+	//Optionally, define the RegExp or function to validate the parameters, if you don't use, the default is '[^\/]+'
 	'param' => array(
 		'foo' => '[a-z]+',
 		'bar' => '[0-9]?' //Disconsidered, because there is no parameter 'bar'
@@ -315,93 +325,6 @@ Response::file('path/to/file.txt', 'Name File', true);
 //Redirect to another route (not implemented)
 Response::redirect('GET', '/foo/bar/');
 ```
-
-**Filter, sanitize and validator:**
-
-```php
-//Import the necessary classes
-use Costamilam\Alpha\Filter;
-
-//Validate if is empty
-Filter::isEmpty('', 0, 0.0, false, array(''));
-//Returns true if one or more arguments are null, empty string or empty array. 0 and false is considered a valid value
-
-//Validate using an existing function
-Filter::validateString('<p>Foo</p>', $error, true, 1, 100, false, 'Bar');
-```
-
-| Parameter | Type | Required | Default value | Description | `Filter::filterString` | `Filter::filterInt` | `Filter::filterFloat` | `Filter::filterBoolean` | `Filter::filterDatetime` |
-|-|-|-|-|-|-|-|-|-|-|
-| 1 | Any | Yes | - | Value to filter | Yes | Yes | Yes | Yes | Yes |
-| 2 | Any | Yes | - | Error list, passing by reference | Yes | Yes | Yes | Yes | Yes |
-| 3 | Boolean | No | `false`, no sanitize | Sanitize value | Yes | Yes | Yes | No | Yes |
-| 4 | Integer | No | `null`, no minimum value | Minimum value | Yes | Yes | Yes | No | Yes |
-| 5 | Integer | No | `null`, no maximum value | Maximum value | Yes | Yes | Yes | No | Yes |
-| 6 | Boolean | No | `false`, is not nullable | Is nullable | Yes | Yes | Yes | Yes | Yes |
-| 7 | Boolean | No | `null`, no default value | Default value, if is invalid | Yes | Yes | Yes | Yes | Yes |
-
-```php
-//Create a custom validation, passing the name and callback function
-Filter::create('myFilterFunctionForName', function ($value, &$error, $to) {
-	$error = array();
-
-	if(strpos($value, 'foo') !== false) {
-		$error[] = '"foo" is a invalid name';
-	}
-	if(strpos($value, 'bar') !== false) {
-		$error[] = '"bar" is a invalid name';
-	}
-
-	$value = $to === 'upper' ? strtoupper($value) : strtolower($value);
-
-	return $value;
-});
-```
-
-> You must receive two arguments in callback, the first is the value to filter and the second is the list of errors. Optionally, you can receive other arguments after
-
-```php
-//Create a custom validation, passing the name, regexp and the error message (if failure)
-Filter::createWithRegExp('myFilterRegExpForName', '/^[a-z ]+$/', 'Invalid name!!!');
-
-//For use custum filter
-Filter::use('myFilterRegExpForName', 'foo bar');
-
-//Example of group filter
-$filter = Filter::group(array(
-	array('filterString', 'My String', false, 10, 50, true, 'default value'), 	//Existing function, using a numerical index
-	'MyAlias' => array('myFilterFunctionForName', 'foo bar', 'upper') 			//Custumized function, using an alias
-), $error);
-//Value of $filter:
-//[
-//	  0 => 'My String',
-//	  'MyAlias' => 'FOO BAR'
-//]
-//Value of $error:
-//[
-//	  'MyAlias' => [
-//		  '"foo" is a invalid name',
-//		  '"bar" is a invalid name'
-//	  ]
-//]
-
-//You can change default error message of existing filter
-Filter::changeErrorMessage(array(
-	'maximumValue' => 'Maximum value overflow! Try again.',
-	'notNull' => 'Value is not nullable! Try again.'
-));
-```
-
-Default error messages
-
-| Name | Message |
-|-|-|
-| `minimumValue` | Insufficient minimum value |
-| `maximumValue` | Maximum value overflow |
-| `notNullable` | Value is not nullable |
-| `invalidBoolean` | Invalid boolean |
-| `invalidInt` | Invalid int |
-| `invalidFloat` | Invalid float |
 
 **Database:**
 

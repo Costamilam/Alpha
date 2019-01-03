@@ -20,14 +20,24 @@ class Token
     private static $issuer;
     private static $audience;
     protected static $expire;
-    private static $signer;
+    private static $signer = array(
+		'hs256' => Signer\Hmac\Sha256::class,
+        'hs384' => Signer\Hmac\Sha384::class,
+        'hs512' => Signer\Hmac\Sha512::class,
+        'rs256' => Signer\Rsa\Sha256::class,
+        'rs384' => Signer\Rsa\Sha384::class,
+        'rs512' => Signer\Rsa\Sha512::class,
+        'es256' => Signer\Ecdsa\Sha256::class,
+        'es384' => Signer\Ecdsa\Sha384::class,
+        'es512' => Signer\Ecdsa\Sha512::class
+	);
 
     private static $callback;
     private static $executed = array();
 
     protected static function configure($algorithm, $key, $issuer, $audience, $expireInMinutes)
     {
-        self::$algorithm = $algorithm;
+        self::$algorithm = strtolower($algorithm);
         self::$issuer = $issuer;
         self::$audience = $audience;
         self::$expire = $expireInMinutes;
@@ -44,43 +54,7 @@ class Token
 
     protected static function create($subject, $data = null)
     {
-        switch (strtolower(self::$algorithm)) {
-            case 'hs256':
-                self::$signer = new Signer\Hmac\Sha256();
-                break;
-
-            case 'hs384':
-                self::$signer = new Signer\Hmac\Sha384();
-                break;
-
-            case 'hs512':
-                self::$signer = new Signer\Hmac\Sha512();
-                break;
-
-            case 'rs256':
-                self::$signer = new Signer\Rsa\Sha256();
-                break;
-
-            case 'rs384':
-                self::$signer = new Signer\Rsa\Sha384();
-                break;
-
-            case 'rs512':
-                self::$signer = new Signer\Rsa\Sha512();
-                break;
-
-            case 'es256':
-                self::$signer = new Signer\Ecdsa\Sha256();
-                break;
-
-            case 'es384':
-                self::$signer = new Signer\Ecdsa\Sha384();
-                break;
-
-            case 'es512':
-                self::$signer = new Signer\Ecdsa\Sha512();
-                break;
-        }
+        $signer = new self::$signer[self::$algorithm];
 
         $token = (new Builder())
             ->setIssuer(self::$issuer)
@@ -90,7 +64,10 @@ class Token
             ->setExpiration(time() + 60 * self::$expire)
             ->setSubject($subject)
             ->set('data', $data)    
-            ->sign(self::$signer, is_array(self::$key) ? self::$key['private'] : self::$key)
+            ->sign(
+                $signer,
+				is_array(self::$key) ? self::$key['private'] : self::$key
+			)
             ->getToken();
 
         self::executeCallback('created', $token->__toString());

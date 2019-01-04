@@ -34,8 +34,8 @@ require_once './vendor/autoload.php';
 //Import the App class
 use Costamilam\Alpha\App;
 
-//Start aplication
-App::start();
+//Start aplication passing the mode ('prod' for production or 'dev' for development)
+App::start('dev');
 ```
 
 **Routing:**
@@ -45,7 +45,7 @@ App::start();
 use Costamilam\Alpha\Router;
 
 //Define default RegExp or function to validate all path parameters 'bar'
-Router::addParamValidator('foo', '[0-9]*');
+Router::addPathParamValidator('foo', '[0-9]*');
 
 //Define default RegExp or function to validate all body parameters 'bar'
 Router::addBodyParamValidator('bar', function($param) {
@@ -91,11 +91,24 @@ Router::get('/{foo}/', function () {
 	//Get parameters
 	$listOfParams = Request::param();
 }, array(
-	//Optionally, define the RegExp or function to validate the parameters, if you don't use, the default is '[^\/]+'
+	//Optionally, define the RegExp or function to validate the parameters (of path or body), if you don't use, the default is '[^\/]+' for path parameters and body parameter is not validate
 	'param' => array(
-		'foo' => '[a-z]+',
-		'bar' => '[0-9]?' //Disconsidered, because there is no parameter 'bar'
-	)
+        'foo' => '[a-z]+',
+        //Disconsidered, because there is no parameter 'bar'
+		'bar' => function($param) {
+            return strtoupper($param) === 'BAR';
+        }
+    ),
+    'body' => array(
+        //The character '?' means that is optional
+        'foo?' => '[a-zA-Z0-9_.]{3,10}',
+        //Get the parameter by reference to format it
+        'bar' => function (&$param) {
+            $param = strtoupper($param);
+
+            return $param === 'BAR';
+        }
+    )
 ));
 
 //Set optional param with '?'
@@ -124,30 +137,16 @@ Router::get('/foo/bar/', function () {
 	//But it is not executed
 });
 
-//Middleware, you can return array in function, this is passed as argument in the next function
+//Middleware, you can call Router::next to execute the next function, passing parameters received as arguments
 Router::get('/foo/', function () {
 	//...
-	return array('bar', 'baz');
+	Router::next('bar', 'baz');
 });
 Router::get('/foo/bar/', function ($bar, $baz) {
 	//$bar === 'bar';
 	//$baz === 'baz';
 });
 
-//If return is true, the execution continue to next route
-Router::get('/foo/bar/', function () {
-	//It is executed
-
-	return true;
-});
-Router::get('/foo/{bar}/', function () {
-	//It is executed
-});
-```
-
-> If the returned function is not an array and is different from 'true', execution is terminated and the next route is not executed
-
-```php
 //To use an external function, pass namespace, the type ('->' for instance or '::' for static) and the function name as string
 Router::get('/foo/', 'Namespace\To\Foo::getStaticFoo');
 Router::get('/foo/', 'Namespace\To\Foo->getInstanceFoo');
@@ -279,9 +278,6 @@ Response::multiHeader(array(
 //Remove a response header
 Response::header('Access-Control-Allow-Headers');
 
-//Change the body of the response
-Response::text('<h1>Response Text</h1>');
-
 //Change the body of the response using JSON format
 Response::json(array(
 	'foo' => 'bar',
@@ -339,7 +335,7 @@ DB::access('host', 'user', 'pass', 'db');
 //Connection charset, recommended 'UTF8'
 DB::charset('UTF8');
 
-//For disconnect
+//For disconnect, it call automacally on execution end
 DB::disconnect();
 
 //Select example:
@@ -437,8 +433,7 @@ Auth::removeToken();
 
 //Route auth passing a callback function for validate
 Auth::route('ANY', '/foo/bar/', function ($payload) {
-	$role = $payload['data'];
-	$role = $role['role'];
+	$role = $payload['data']['role'];
 
 	if (in_array('admin', $role)) {
 		return true; 	//Authenticated

@@ -40,7 +40,7 @@ class App
         return self::$startedAt;
     }
 
-    public static function start($mode = 'dev')
+    public static function start($mode)
     {
         if (self::$instance === null) {
             self::$instance = new App($mode);

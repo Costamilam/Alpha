@@ -8,7 +8,7 @@ use Costamilam\Alpha\Request;
 
 class Router extends Route
 {
-    private static $baseRoute = '';
+    private static $prefix = '';
 
     private static $instances = array();
 
@@ -24,13 +24,18 @@ class Router extends Route
         return self::$instances[$name];
     }
 
-    public static function path($baseRoute, $group) 
-    {
-        self::$baseRoute = $baseRoute;
+    public static function fromFile($path, $file) {
+        if (substr($path, 0, 1) !== '/') {
+            $path = '/'.$path;
+        }
 
-        $group();
+        if (strpos(Request::path(), $path) === 0) {
+            self::$prefix = $path;
 
-        self::$baseRoute = '';
+            require $file;
+
+            self::$prefix = '';
+        }
     }
 
     public static function dispatch()
@@ -46,7 +51,7 @@ class Router extends Route
     {
         self::$route[] = array(
             'method' => $method,
-            'route' => $route,
+            'route' => self::$prefix.$route,
             'callback' => $callback,
             'param' => isset($option['param']) ? $option['param'] : array(),
             'body' => isset($option['body']) ? $option['body'] : array()

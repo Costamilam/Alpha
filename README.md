@@ -44,22 +44,8 @@ App::start('dev');
 //Import the necessary classes
 use Costamilam\Alpha\Router;
 
-//Define default RegExp or function to validate all path parameters 'bar'
-Router::addPathParamValidator('foo', '[0-9]*');
-
-//Define default RegExp or function to validate all body parameters 'bar'
-Router::addBodyParamValidator('bar', function($param) {
-    return $param === 'bar';
-});
-
-//The callback function recive a parameter and has return if it is valid, you can receive the parameter as a reference (&$param) to format and validate
-
-//Define default RegExp or function to validate all body parameters 'bar'
-Router::addBodyParamValidator('baz', function(&$param) {
-    $param = strtoupper($param);
-
-    return $param === 'BAZ';
-});
+//Load file based on path
+Router::fromFile('/foo', './router/foo.php');
 
 //Create a route by defining the method, route, and callback
 Router::set('GET', '/my/route/', function () {
@@ -88,19 +74,17 @@ Router::set(array('GET', 'POST'), '/my/route/', function () {
 ```php
 //Using parameters with '{}'
 Router::get('/{foo}/', function () {
-	//Get parameters
-	$listOfParams = Request::param();
+	//...
 }, array(
-	//Optionally, define the RegExp or function to validate the parameters (of path or body), if you don't use, the default is '[^\/]+' for path parameters and body parameter is not validate
-	'param' => array(
+    //Optionally, define the RegExp or function to validate the parameters (of path or body), if you don't use, the default is '[^\/]+' for path parameters and body parameter is not validate
+    'param' => array(
         'foo' => '[a-z]+',
-        //Disconsidered, because there is no parameter 'bar'
-		'bar' => function($param) {
+		'bar' => function($param) { //Disconsidered, because there is no parameter 'bar'
             return strtoupper($param) === 'BAR';
         }
     ),
     'body' => array(
-        //The character '?' means that is optional
+        //Defined parameters are required by default, add the character '?' in the end to make it optional
         'foo?' => '[a-zA-Z0-9_.]{3,10}',
         //Get the parameter by reference to format it
         'bar' => function (&$param) {
@@ -110,6 +94,21 @@ Router::get('/{foo}/', function () {
         }
     )
 ));
+
+//Define default RegExp or function to validate all path parameters 'bar'
+Router::addPathParamValidator('foo', '[0-9]*');
+
+//Define default RegExp or function to validate all body parameters 'bar'
+Router::addBodyParamValidator('bar', function($param) {
+    return $param === 'bar';
+});
+
+//The callback function recive a parameter and has return if it is valid, you can receive the parameter as a reference (&$param) to format and validate
+Router::addBodyParamValidator('baz', function(&$param) {
+    $param = strtoupper($param);
+
+    return $param === 'BAZ';
+});
 
 //Set optional param with '?'
 Router::get('/{foo}/{bar}?/', function () {

@@ -20,7 +20,7 @@ class Request
 
         //$route = preg_quote($route);
         //$route = rtrim($route, "/");
-        self::$path = str_replace($_SERVER['SCRIPT_NAME'], '', $_SERVER['REQUEST_URI']);
+        self::$path = str_replace($_SERVER['SCRIPT_NAME'], '', $_SERVER['REQUEST_URI']) ?: '/';
 
         if (isset($_SERVER['QUERY_STRING'])) {
             self::$path = str_replace('?'.$_SERVER['QUERY_STRING'], '', self::$path);

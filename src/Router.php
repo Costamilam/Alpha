@@ -10,19 +10,9 @@ class Router extends Route
 {
     private static $prefix = '';
 
-    private static $instances = array();
-
     private static $next = array();
 
     private static $route = array();
-
-    public static function addInstance($name, $object) {
-        self::$instances[$name] = $object;
-    }
-
-    public static function getInstance($name) {
-        return self::$instances[$name];
-    }
 
     public static function fromFile($path, $file) {
         if (substr($path, 0, 1) !== '/') {

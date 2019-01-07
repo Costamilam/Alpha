@@ -15,6 +15,12 @@ class Route
 
     private static $next = null;
 
+    private static $instance = array();
+
+    public static function addInstance($name, $object) {
+        self::$instance[$name] = $object;
+    }
+
     public static function addPathParamValidator($validator)
     {
         foreach ($regexp as $name => $value) {
@@ -193,12 +199,12 @@ class Route
         if (gettype($route['callback']) === 'string' && strpos($route['callback'], '->') !== false) {
             $parse = explode('->', $route['callback']);
 
-            $object = Router::getInstance($parse[0]);
-
-            if ($object === null) {
+            if (isset(self::$instance[$parse[0]])) {
                 $object = new $parse[0];
 
-                Router::addInstance($parse[0], $object);
+                self::addInstance($parse[0], $object);
+            } else {
+                $object = self::$instance[$parse[0]];
             }
 
             $object->{$parse[1]}(...$argument);

@@ -70,9 +70,7 @@ class App
 
     public function __destruct()
     {
-        if (Auth::dispatch() === true) {
-            Router::dispatch();
-        }
+        Router::dispatch();
 
         DB::disconnect();
 

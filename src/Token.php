@@ -3,6 +3,7 @@
 namespace Costamilam\Alpha;
 
 use Costamilam\Alpha\App;
+use Costamilam\Alpha\Auth;
 use Costamilam\Alpha\Response;
 
 use Lcobucci\JWT\Builder;
@@ -12,14 +13,11 @@ use Lcobucci\JWT\ValidationData;
 
 class Token
 {
-    public static $currentToken;
-    public static $regeneratedToken;
-
     private static $algorithm;
     private static $key;
     private static $issuer;
     private static $audience;
-    protected static $expire;
+    private static $expire;
     private static $signer = array(
 		'hs256' => Signer\Hmac\Sha256::class,
         'hs384' => Signer\Hmac\Sha384::class,
@@ -32,10 +30,7 @@ class Token
         'es512' => Signer\Ecdsa\Sha512::class
 	);
 
-    private static $callback;
-    private static $executed = array();
-
-    protected static function configure($algorithm, $key, $issuer, $audience, $expireInMinutes)
+    private static function configure($algorithm, $key, $issuer, $audience, $expireInMinutes)
     {
         self::$algorithm = strtolower($algorithm);
         self::$issuer = $issuer;
@@ -52,7 +47,12 @@ class Token
         }
     }
 
-    protected static function create($subject, $data = null)
+    private static function expire()
+    {
+        return self::$expire;
+    }
+
+    private static function create($subject, $data = null)
     {
         $signer = new self::$signer[self::$algorithm];
 
@@ -70,15 +70,15 @@ class Token
 			)
             ->getToken();
 
-        self::executeCallback('created', $token->__toString());
+        Auth::callStatus('created', $token->__toString());
 
         return $token;
     }
 
-    protected static function verify($token, $callback)
+    private static function verify($token, $callback)
     {
         if ($token === null) {
-            self::executeCallback('empty');
+            Auth::callStatus('empty');
 
             return false;
         }
@@ -86,7 +86,7 @@ class Token
         try {
             $token = (new Parser())->parse($token);
         } catch (\Exception $exception) {
-            self::executeCallback('invalid');
+            Auth::callStatus('invalid');
 
             return false;
         }
@@ -99,61 +99,43 @@ class Token
             if (
                 $callback === null ||
                 is_callable($callback) &&
-                call_user_func($callback, self::getPayload($token)) === true
+                call_user_func($callback, self::parsePayload($token)) === true
             ) {
-                self::executeCallback('authorized', self::getPayload($token));
-            } else {
-                self::executeCallback('forbidden', self::getPayload($token));
-            }
+                Auth::callStatus('authorized', self::parsePayload($token));
 
-            return true;
+                return true;
+            } else {
+                Auth::callStatus('forbidden', self::parsePayload($token));
+
+                return false;
+            }
         } else {
             if ($token->isExpired()) {
-                self::executeCallback('expired', self::getPayload($token));
+                Auth::callStatus('expired', self::parsePayload($token));
             } else {
-                self::executeCallback('invalid');
+                Auth::callStatus('invalid');
             }
 
             return false;
         }
     }
 
-    protected static function onStatus($status, $callback)
+    private static function payload($token)
     {
-        if (is_array($status)) {
-            foreach ($status as $value) {
-                self::$callback[$value] = $callback;
-            }
-        } else {
-            self::$callback[$status] = $callback;
+        if ($token === null) {
+            $token = Request::token();
         }
+
+        try {
+            $token = (new Parser())->parse($token);
+        } catch (\Exception $exception) {
+            return false;
+        }
+
+        return self::parsePayload($token);
     }
 
-    private static function executeCallback($status, ...$param)
-    {
-        if (in_array($status, self::$executed)) {
-            return;
-        }
-
-        self::$executed[] = $status;
-
-        if (isset(self::$callback[$status]) && is_callable(self::$callback[$status])) {
-            call_user_func(self::$callback[$status], ...$param);
-        } else {
-            $response = array(
-                'empty' => 401,
-                'expired' => 401,
-                'invalid' => 401,
-                'forbidden' => 403
-            );
-
-            if (isset($response[$status])) {
-                Response::status($response[$status]);
-            }
-        }
-    }
-
-    private function getPayload($token) {
+    private function parsePayload($token) {
         $payload = array();
         $name = array(
             'sub' => 'subject',

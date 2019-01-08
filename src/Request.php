@@ -6,11 +6,11 @@ class Request
 {
     private static $method;
 
-    private static $header;
-
     private static $path;
 
     private static $param;
+
+    private static $header;
 
     private static $body;
 
@@ -92,6 +92,23 @@ class Request
             if ($key === $name) {
                 return urldecode($value);
             }
+        }
+    }
+
+    public static function token()
+    {
+        if (Auth::mode() === 'cookie') {
+            return self::cookie('Token');
+        } elseif (Auth::mode() === 'header') {
+            $auth = self::header('Token');
+
+            if ($auth !== null) {
+                $auth = explode(' ', $auth, 2);
+
+                $auth = isset($auth[0]) && strtolower($auth[0]) === 'bearer' && isset($auth[1]) ? $auth[1] : null;
+            }
+
+            return $auth;
         }
     }
 

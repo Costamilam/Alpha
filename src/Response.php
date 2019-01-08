@@ -3,6 +3,8 @@
 namespace Costamilam\Alpha;
 
 use Costamilam\Alpha\App;
+use Costamilam\Alpha\Auth;
+use Costamilam\Alpha\Token;
 use Costamilam\Alpha\Request;
 
 class Response
@@ -95,6 +97,27 @@ class Response
         $expireInMinutes = $expireInMinutes === null ? self::$cookieConfig['expire'] : time() + 60 * $expireInMinutes;
 
         setcookie($name, urlencode($value), $expireInMinutes, '/', self::$cookieConfig['domain'], self::$cookieConfig['secure'], self::$cookieConfig['httponly']);
+    }
+
+    public static function token($token = 'auto')
+    {
+        if ($token === null) {
+            if (Auth::mode() === 'cookie') {
+                self::cookie('Token', '', 0);
+            } elseif (Auth::mode() === 'header') {
+                self::header('Token');
+            }
+        } else {
+            if ($token === 'auto') {
+                $token = Token::create();
+            }
+
+            if (Auth::mode() === 'cookie') {
+                self::cookie('Token', $token, Token::expire());
+            } elseif (Auth::mode() === 'header') {
+                self::header('Token', $token);
+            }
+        }
     }
 
     public static function dispatch()

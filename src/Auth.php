@@ -19,7 +19,7 @@ class Auth
         self::$mode = 'cookie';
     }
 
-    public static function enableHTTPHeaderMode()
+    public static function enableHeaderMode()
     {
         self::$mode = 'header';
     }

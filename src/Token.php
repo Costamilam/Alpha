@@ -30,7 +30,7 @@ class Token
         'es512' => Signer\Ecdsa\Sha512::class
 	);
 
-    private static function configure($algorithm, $key, $issuer, $audience, $expireInMinutes)
+    public static function configure($algorithm, $key, $issuer, $audience, $expireInMinutes)
     {
         self::$algorithm = strtolower($algorithm);
         self::$issuer = $issuer;
@@ -47,12 +47,12 @@ class Token
         }
     }
 
-    private static function expire()
+    public static function expire()
     {
         return self::$expire;
     }
 
-    private static function create($subject, $data = null)
+    public static function create($subject, $data = null)
     {
         $signer = new self::$signer[self::$algorithm];
 
@@ -68,14 +68,15 @@ class Token
                 $signer,
 				is_array(self::$key) ? self::$key['private'] : self::$key
 			)
-            ->getToken();
+            ->getToken()
+            ->__toString();
 
-        Auth::callStatus('created', $token->__toString());
+        Auth::callStatus('created', $token);
 
         return $token;
     }
 
-    private static function verify($token, $callback)
+    public static function verify($token, $callback)
     {
         if ($token === null) {
             Auth::callStatus('empty');
@@ -120,10 +121,14 @@ class Token
         }
     }
 
-    private static function payload($token)
+    public static function payload($token = null)
     {
         if ($token === null) {
             $token = Request::token();
+        }
+
+        if ($token === null) {
+            return false;
         }
 
         try {

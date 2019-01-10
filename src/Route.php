@@ -58,13 +58,11 @@ class Route
             || !self::isValidBody($config)
         ) {
             Logger::logRoute($original, false);
+        } else {
+            Logger::logRoute($original, true);
 
-            return false;
+            return self::execute($config);
         }
-
-        Logger::logRoute($original, true);
-
-        return self::execute($config);
     }
 
     private static function prepareMethod(&$route)

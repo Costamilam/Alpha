@@ -2,8 +2,8 @@
 
 namespace Costamilam\Alpha;
 
-use Costamilam\Alpha\Token;
-use Costamilam\Alpha\Request;
+// use Costamilam\Alpha\Token;
+// use Costamilam\Alpha\Request;
 use Costamilam\Alpha\Response;
 
 class Auth
@@ -12,7 +12,7 @@ class Auth
 
     private static $executed = array();
 
-    private static $mode = true;
+    private static $mode = 'header';
 
     public static function enableCookieMode()
     {
@@ -40,7 +40,7 @@ class Auth
         }
     }
 
-    private static function callStatus($status, ...$param)
+    public static function callStatus($status, ...$param)
     {
         // if (in_array($status, self::$executed)) {
         //     return;

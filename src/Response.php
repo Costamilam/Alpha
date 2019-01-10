@@ -13,7 +13,7 @@ class Response
 
     private static $header = array();
 
-    private static $body = array();
+    private static $body = '';
 
     private static $cookieConfig;
 

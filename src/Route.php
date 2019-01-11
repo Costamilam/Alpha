@@ -3,6 +3,7 @@
 namespace Costamilam\Alpha;
 
 use Costamilam\Alpha\App;
+use Costamilam\Alpha\Token;
 use Costamilam\Alpha\Router;
 use Costamilam\Alpha\Request;
 use Costamilam\Alpha\Debugger\Logger;
@@ -23,7 +24,7 @@ class Route
 
     public static function addPathParamValidator($validator)
     {
-        foreach ($regexp as $name => $value) {
+        foreach ($validator as $name => $value) {
             self::$param[$name] = $value;
         }
 
@@ -32,7 +33,7 @@ class Route
 
     public static function addBodyParamValidator($validator)
     {
-        foreach ($regexp as $name => $value) {
+        foreach ($validator as $name => $value) {
             self::$bodyParam[$name] = $value;
         }
 
@@ -50,13 +51,15 @@ class Route
 
         self::prepareMethod($config);
 
+        if (!in_array(Request::method(), $config['method'])) {
+            Logger::logRoute($original, false);
+
+            return;
+        }
+
         self::preparePath($config);
 
-        if (
-            !in_array(Request::method(), $config['method'])
-            || $config['match'] === null
-            || !self::isValidBody($config)
-        ) {
+        if ($config['match'] === null || !self::isValidBody($config)) {
             Logger::logRoute($original, false);
         } else {
             Logger::logRoute($original, true);

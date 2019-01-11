@@ -98,9 +98,9 @@ class Request
     public static function token()
     {
         if (Auth::mode() === 'cookie') {
-            return self::cookie('Token');
+            return self::cookie('Authorization');
         } elseif (Auth::mode() === 'header') {
-            $auth = self::header('Token');
+            $auth = self::header('Authorization');
 
             if ($auth !== null) {
                 $auth = explode(' ', $auth, 2);

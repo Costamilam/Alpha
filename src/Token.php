@@ -52,7 +52,7 @@ class Token
         return self::$expire;
     }
 
-    public static function create($subject, $data = null)
+    public static function create($subject, $role, $data = null)
     {
         $signer = new self::$signer[self::$algorithm];
 
@@ -63,7 +63,8 @@ class Token
             ->setNotBefore(time())
             ->setExpiration(time() + 60 * self::$expire)
             ->setSubject($subject)
-            ->set('data', $data)    
+            ->set('role', $role)
+            ->set('data', $data)
             ->sign(
                 $signer,
 				is_array(self::$key) ? self::$key['private'] : self::$key
@@ -76,7 +77,7 @@ class Token
         return $token;
     }
 
-    public static function verify($token, $callback)
+    public static function verify($token, $subject, $role)
     {
         if ($token === null) {
             Auth::callStatus('empty');
@@ -98,9 +99,13 @@ class Token
 
         if ($token->validate($validator)) {
             if (
-                $callback === null ||
-                is_callable($callback) &&
-                call_user_func($callback, self::parsePayload($token)) === true
+                (
+                    $subject === null ||
+                    $subject == $token->getClaim('sub')
+                ) && (
+                    $role === null ||
+                    $role == $token->getClaim('role')
+                )
             ) {
                 Auth::callStatus('authorized', self::parsePayload($token));
 
@@ -121,12 +126,8 @@ class Token
         }
     }
 
-    public static function payload($token = null)
+    public static function payload($token)
     {
-        if ($token === null) {
-            $token = Request::token();
-        }
-
         if ($token === null) {
             return false;
         }

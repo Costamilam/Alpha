@@ -35,7 +35,7 @@ class DB
     private static function connect()
     {
         if (!self::$connection) {
-            self::$connection = new \mysqli(...self::$access);
+            self::$connection = new \mysqli(...array_values(self::$access));
 
             if (self::$charset) {
                 self::$connection->set_charset(self::$charset);
@@ -79,7 +79,7 @@ class DB
         return $results;
     }
 
-    private static function execute($query, $param, $returnStatement = false)
+    private static function execute($query, $param)
     {
         $type = array();
         $blob = array();
@@ -109,13 +109,13 @@ class DB
                     break;
 
                 case 'object':
+                case 'array':
                     $type[] = 's';
                     $parameter = json_encode($parameter);
                     break;
 
-                case 'array':
+                case 'null':
                     $type[] = 's';
-                    $parameter = json_encode($parameter);
                     break;
             }
         }
@@ -123,16 +123,14 @@ class DB
         $statement = self::connect()->prepare($query);
 
         if (!empty($type)) {
-            $statement->bind_param(implode('', $type), $param);
+            $statement->bind_param(implode('', $type), ...$param);
         }
 
         foreach ($blob as $index => $data) {
             self::$connection->send_long_data($index, $data);
         }
 
-        $execute = $statement->execute();
-
-        return $returnStatement ? $statement : $execute;
+        return $statement;
     }
 
     public static function insert($query, ...$param)
@@ -147,7 +145,7 @@ class DB
             return false;
         }
 
-        $execute = self::execute($query, $param);
+        $execute = self::execute($query, $param)->execute();
 
         self::$insertedId = self::$connection->insert_id;
 
@@ -166,7 +164,7 @@ class DB
             return false;
         }
 
-        return self::execute($query, $param);
+        return self::execute($query, $param)->execute();
     }
 
     public static function delete($query, ...$param)
@@ -181,7 +179,7 @@ class DB
             return false;
         }
 
-        return self::execute($query, $param);
+        return self::execute($query, $param)->execute();
     }
 
     public static function select($query, ...$param)
@@ -196,7 +194,7 @@ class DB
             return false;
         }
 
-        $statement = self::execute($query, $param, true);
+        $statement = self::execute($query, $param);
 
         return self::fetch($statement);
     }

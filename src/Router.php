@@ -19,6 +19,10 @@ class Router extends Route
             $path = '/'.$path;
         }
 
+        if (substr($path, -1) === '/') {
+            $path = substr($path, 0, -1);
+        }
+
         if (strpos(Request::path(), $path) === 0) {
             self::$prefix = $path;
 
@@ -41,7 +45,7 @@ class Router extends Route
     {
         self::$route[] = array(
             'method' => $method,
-            'route' => self::$prefix.$route,
+            'route' => self::$prefix.(substr($route, 0, 1) === '/' ? $route : '/'.$route),
             'callback' => $callback,
             'param' => isset($option['param']) ? $option['param'] : array(),
             'body' => isset($option['body']) ? $option['body'] : array()

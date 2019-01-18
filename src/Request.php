@@ -30,7 +30,7 @@ class Request
 
         self::$param = array();
 
-        if (strcasecmp(self::header('Content-Type'), 'application/json')) {
+        if (strpos(self::header('Content-Type'), 'application/json') !== false) {
             self::$body = json_decode(file_get_contents('php://input'), true);
         } else {
             parse_str(file_get_contents('php://input'), self::$body);

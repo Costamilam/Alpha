@@ -193,22 +193,28 @@ class Route
 
         self::$next = null;
 
-        Logger::logRoute($route, true);
-
         Request::setParam($route['match']);
 
-        if (gettype($route['callback']) === 'string' && strpos($route['callback'], '->') !== false) {
-            $parse = explode('->', $route['callback']);
-
-            if (isset(self::$instance[$parse[0]])) {
-                $object = new $parse[0];
-
-                self::addInstance($parse[0], $object);
-            } else {
-                $object = self::$instance[$parse[0]];
+        if (gettype($route['callback']) === 'string') {
+            if (substr($route['callback'], 0, 1) !== '\\') {
+                $route['callback'] = '\\'.$route['callback'];
             }
 
-            $object->{$parse[1]}(...$argument);
+            if (strpos($route['callback'], '->') !== false) {
+                $parse = explode('->', $route['callback']);
+
+                if (isset(self::$instance[$parse[0]])) {
+                    $object = new $parse[0];
+
+                    self::addInstance($parse[0], $object);
+                } else {
+                    $object = self::$instance[$parse[0]];
+                }
+
+                call_user_func(array($object, $parse[1]), ...$argument);
+            } else {
+                $route['callback'](...$argument);
+            }
         } else {
             call_user_func($route['callback'], ...$argument);
         }

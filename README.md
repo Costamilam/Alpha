@@ -44,7 +44,7 @@ App::start('dev');
 //Import the necessary classes
 use Costamilam\Alpha\Router;
 
-//Load file based on path
+//Load file based on path (not accepted regex)
 Router::fromFile('/foo', './router/foo.php');
 
 //Create a route by defining the method, route, and callback
@@ -60,6 +60,7 @@ Router::set(array('GET', 'POST'), '/my/route/', function () {
 
 | Method | Function | Description |
 |-|-|-|
+| Enumeration | `Router::set` | Define one or more HTTP method |
 | Any | `Router::any` | Any HTTP method |
 | GET | `Router::get` | GET HTTP method |
 | POST | `Router::post` | POST HTTP method |
@@ -69,7 +70,6 @@ Router::set(array('GET', 'POST'), '/my/route/', function () {
 | OPTIONS | `Router::options` | OPTIONS HTTP method |
 | CONNECT | `Router::connect` | CONNECT HTTP method |
 | TRACE | `Router::trace` | TRACE HTTP method |
-| Enumeration | `Router::set` | Define one or more HTTP method |
 
 ```php
 //Using parameters with '{}'
@@ -79,7 +79,8 @@ Router::get('/{foo}/', function () {
     //Optionally, define the RegExp or function to validate the parameters (of path or body), if you don't use, the default is '[^\/]+' for path parameters and body parameter is not validate
     'param' => array(
         'foo' => '[a-z]+',
-		'bar' => function($param) { //Disconsidered, because there is no parameter 'bar'
+        //Disconsidered, because there is no parameter 'bar'
+        'bar' => function($param) {
             return strtoupper($param) === 'BAR';
         }
     ),
@@ -164,15 +165,15 @@ class Foo {
 	}
 
 	public function getInstanceFoo() {
-		echo 'Instance '.$this->foobar; 	//Instance Foo
+		echo 'Instance '.$this->foobar;     //Instance Foo
 
-		$this->foobar = 'Bar'; 				//Change foobar
+		$this->foobar = 'Bar';              //Change foobar
 
 		return true;
 	}
 
 	public function getInstanceBar() {
-		echo 'Instance '.$this->foobar; 	//Instance Bar
+		echo 'Instance '.$this->foobar;     //Instance Bar
 	}
 }
 ```
@@ -294,10 +295,10 @@ Response::cache(15);
 
 //Change default cookie options
 Response::configureCookie(
-	24 * 60, 		//Time to expire in minutes (24 hours)
-	'HTTP_HOST', 	//If present, use Host request header else use empty string ('')
-	true, 			//Only HTTPS (recommended true)
-	true 			//Access only http, disable access by JavaScript (recommended true)
+	24 * 60,        //Time to expire in minutes (24 hours)
+	'HTTP_HOST',    //If present, use Host request header else use empty string ('')
+	true,           //Only HTTPS (recommended true)
+	true            //Access only http, disable access by JavaScript (recommended true)
 );
 ```
 
@@ -373,7 +374,7 @@ DB::select('INSERT FROM foobar(foo, file) VALUES(?, ?)', $foo, $file);
 use Costamilam\Alpha\Auth;
 
 //For send by HTTP header
-Auth::enableHTTPHeaderMode();
+Auth::enableHeaderMode();
 
 //For send by Cookie
 Auth::enableCookieMode();
@@ -384,11 +385,11 @@ Auth::enableCookieMode();
 ```php
 //Configure the auth module
 Auth::configureToken(
-	'hs256',					//Algorithm
-	'mY SuperSECRET.key',		//Secret key
-	'https://example.com',		//Issuer
-	'https://example.com',		//Audience
-	30							//Time to expires (in minutes)
+	'hs256',                    //Algorithm
+	'mY SuperSECRET.key',       //Secret key
+	'https://example.com',      //Issuer
+	'https://example.com',      //Audience
+	30                          //Time to expires (in minutes)
 );
 ```
 
@@ -419,10 +420,10 @@ Auth::onStatus(array('empty', 'invalid', 'expired'), function () { /* ... */ });
 //Create and send a token to the client by configured mode, pass the subject and, optionally, other data
 Auth::setToken(
 	Auth::createToken(
-		17, 										//For example, the user id
-		array( 										//Data to save
-			'name' => 'Foo', 						//User name
-			'role' => array('salesman', 'admin') 	//User roles, for authenticate
+		17,                                             //For example, the user id
+		array(						//Data to save
+			'name' => 'Foo',			//User name
+			'role' => array('salesman', 'admin')	//User roles, for authenticate
 		)
 	)
 );

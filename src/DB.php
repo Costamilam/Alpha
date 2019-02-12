@@ -5,11 +5,10 @@ namespace Costamilam\Alpha;
 class DB
 {
     private static $access;
+
     private static $charset;
 
     private static $connection;
-
-    private static $statement;
 
     public static $insertedId;
 
@@ -35,7 +34,7 @@ class DB
     private static function connect()
     {
         if (!self::$connection) {
-            self::$connection = new \mysqli(...array_values(self::$access));
+            self::$connection = new \mysqli(self::$access['host'], self::$access['username'], self::$access['password'], self::$access['database']);
 
             if (self::$charset) {
                 self::$connection->set_charset(self::$charset);

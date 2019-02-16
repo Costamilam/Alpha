@@ -99,7 +99,7 @@ class Response
         setcookie($name, urlencode($value), $expireInMinutes, '/', self::$cookieConfig['domain'], self::$cookieConfig['secure'], self::$cookieConfig['httponly']);
     }
 
-    public static function token($token = 'auto')
+    public static function token($token)
     {
         if ($token === null) {
             if (Auth::mode() === 'cookie') {
@@ -108,10 +108,6 @@ class Response
                 self::header('Token');
             }
         } else {
-            if ($token === 'auto') {
-                $token = Token::create();
-            }
-
             if (Auth::mode() === 'cookie') {
                 self::cookie('Token', $token, Token::expire());
             } elseif (Auth::mode() === 'header') {

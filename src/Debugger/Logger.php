@@ -14,8 +14,6 @@ class Logger
 
     public static $loggerFile = null;
 
-    public static $debuged = false;
-
     public static function start($path, $overwrite = true) {
         if (substr($path, -1) !== '/') {
             $path .= '/';
@@ -30,19 +28,18 @@ class Logger
         if ($overwrite === true) {
             self::$loggerFile = 'logger.log.json';
         } else {
-            for ($i = 0; file_exists(self::$loggerPath.App::$startedAt.'_'.$i.'.log.json'); $i++) {  }
-
-            self::$loggerFile = App::$startedAt.'_'.$i.'.log.json';
+            self::$loggerFile = App::startedAt('Y-m-d_H:i:s_u').'.log.json';
         }
 
         if (App::isDevMode()) {
-            self::writeInFile(self::$loggerFile, array(
-                'startedAt' => App::$startedAt,
+            self::writeFile(self::$loggerFile, array(
+                'startedAt' => App::startedAt('Y-m-d H:i:s'),
                 'domain' => Request::header('Host'),
                 'ip' => Request::header('Host'),
                 'method' => Request::method(),
-                'route' => Request::path(),
-                'body' => Request::body()
+                'path' => Request::path(),
+                'body' => Request::body(),
+                'routes' => array()
             ));
         }
 
@@ -56,8 +53,8 @@ class Logger
         }
 
         if (App::isProdMode()) {
-            self::writeInFile('production-error.log.json', array(
-                'date' => App::$startedAt,
+            self::writeFile('production-error.log.json', array(
+                'date' => App::startedAt(),
                 'origin' => Request::header('Host'),
                 'ip' => Request::header('Host'),
                 'method' => Request::method(),
@@ -76,17 +73,23 @@ class Logger
             return;
         }
 
+        $content = $data;
+
         if (!$overwrite) {
-            $content = json_decode(file_get_contents(self::$loggerPath.'custom.log.json'));
+            $content = self::readFile('custom.log.json');
 
-            if (isset($content[App::startedAt()])) {
-                $content[App::startedAt()][] = $data;
-            } else {
+            if (!is_array($content)) {
+                $content = array(
+                    App::startedAt() => array($data)
+                );
+            } elseif (!isset($content[App::startedAt()])) {
                 $content[App::startedAt()] = array($data);
+            } else {
+                $content[App::startedAt()][] = $data;
             }
-
-            self::writeInFile($content, 'custom.log.json');
         }
+
+        self::writeFile('custom.log.json', $content);
     }
 
     public static function logRoute($route, $executed)
@@ -95,19 +98,28 @@ class Logger
             return;
         }
 
-        self::writeInFile(self::$loggerFile, array(
+        $content = self::readFile(self::$loggerFile);
+
+        $content['routes'][] = array(
             'executed' => $executed,
             'route' => $route,
-            'parameter' => Request::param(),
-            'body' => Request::body()
-        ));
+            'parameter' => Request::param()
+        );
+
+        self::writeFile(self::$loggerFile, $content);
     }
 
-    private static function writeInFile($fileName, $content) {
-        $file = fopen(self::$loggerPath.$fileName, 'a');
+    private static function readFile($fileName) {
+        return json_decode(
+            file_get_contents(self::$loggerPath.$fileName),
+            true
+        );
+    }
 
-        fwrite($file, json_encode($content));
-
-        fclose($file);
+    private static function writeFile($fileName, $content) {
+        return file_put_contents(
+            self::$loggerPath.$fileName,
+            json_encode($content, JSON_PRETTY_PRINT)
+        );
     }
 }

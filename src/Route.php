@@ -49,6 +49,8 @@ class Route
     {
         $original = $config;
 
+        $original['callback'] = is_string($original['callback']) ? $original['callback'] : 'function';
+
         self::prepareMethod($config);
 
         if (!in_array(Request::method(), $config['method'])) {
@@ -62,9 +64,11 @@ class Route
         if ($config['match'] === null || !self::isValidBody($config)) {
             Logger::logRoute($original, false);
         } else {
+            $result = self::execute($config);
+
             Logger::logRoute($original, true);
 
-            return self::execute($config);
+            return $result;
         }
     }
 

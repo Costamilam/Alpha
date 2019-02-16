@@ -15,7 +15,7 @@ class App
 
     private static $mode = null;
 
-    public static $startedAt;
+    private static $startedAt;
 
     public static function isDevMode()
     {
@@ -35,9 +35,9 @@ class App
         return !self::$mode;
     }
 
-    public static function startedAt()
+    public static function startedAt($format = 'Y-m-d H:i:s.u')
     {
-        return self::$startedAt;
+        return self::$startedAt->format($format);
     }
 
     public static function start($mode)
@@ -51,7 +51,7 @@ class App
 
     private function __construct($mode)
     {
-        self::$startedAt = date('Y-m-d-H:i:s');
+        self::$startedAt = date_create_from_format('U.u', microtime(true));
 
         ob_start();
 

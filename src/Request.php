@@ -97,19 +97,15 @@ class Request
 
     public static function token()
     {
-        if (Auth::mode() === 'cookie') {
-            return self::cookie('Token');
-        } elseif (Auth::mode() === 'header') {
-            $auth = self::header('Authorization');
+        $auth = self::header('Authorization');
 
-            if ($auth !== null) {
-                $auth = explode(' ', $auth, 2);
+        if ($auth !== null) {
+            $auth = explode(' ', $auth, 2);
 
-                $auth = isset($auth[0]) && strtolower($auth[0]) === 'bearer' && isset($auth[1]) ? $auth[1] : null;
-            }
-
-            return $auth;
+            $auth = isset($auth[0]) && strtolower($auth[0]) === 'bearer' && isset($auth[1]) ? $auth[1] : null;
         }
+
+        return $auth;
     }
 
     public static function path()

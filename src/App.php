@@ -3,7 +3,6 @@
 namespace Costamilam\Alpha;
 
 use Costamilam\Alpha\DB;
-use Costamilam\Alpha\Auth;
 use Costamilam\Alpha\Router;
 use Costamilam\Alpha\Request;
 use Costamilam\Alpha\Response;

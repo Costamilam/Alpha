@@ -102,17 +102,9 @@ class Response
     public static function token($token)
     {
         if ($token === null) {
-            if (Auth::mode() === 'cookie') {
-                self::cookie('Token', '', 0);
-            } elseif (Auth::mode() === 'header') {
-                self::header('Token');
-            }
+            self::header('Token');
         } else {
-            if (Auth::mode() === 'cookie') {
-                self::cookie('Token', $token, Token::expire());
-            } elseif (Auth::mode() === 'header') {
-                self::header('Token', $token);
-            }
+            self::header('Token', $token);
         }
     }
 

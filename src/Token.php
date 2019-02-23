@@ -80,20 +80,16 @@ class Token
         return $token;
     }
 
-    public static function verify($token, $callback = null)
+    public static function verify($token)
     {
         if ($token === null) {
-            Auth::callStatus('empty');
-
-            return false;
+            return 'empty';
         }
 
         try {
             $token = (new Parser())->parse($token);
         } catch (\Exception $exception) {
-            Auth::callStatus('invalid');
-
-            return false;
+            return 'invalid';
         }
 
         $validator = new ValidationData();
@@ -102,26 +98,15 @@ class Token
 
         $validator->setAudience(self::$audience);
 
-        if ($token->validate($validator)) {
-            if (
-                $callback === null ||
-                call_user_func($callback) === true
-            ) {
-                Auth::callStatus('authorized');
-
-                return true;
-            } else {
-                Auth::callStatus('forbidden');
-            }
-        } else {
+        if (!$token->validate($validator)) {
             if ($token->isExpired()) {
-                Auth::callStatus('expired');
+                return 'expired';
             } else {
-                Auth::callStatus('invalid');
+                return 'invalid';
             }
         }
 
-        return false;
+        return 'ok';
     }
 
     public static function payload($token)

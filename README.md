@@ -25,7 +25,7 @@ composer require costamilam/alpha:dev-master
 
 ## Features
 
-**Init:**
+**Starting:**
 
 ```php
 //Include a composer autoload
@@ -36,6 +36,9 @@ use Costamilam\Alpha\App;
 
 //Start aplication passing the mode ('prod' for production or 'dev' for development)
 App::start('dev');
+
+//Get formatted application start date, the default is 'Y-m-d H:i:s.u'
+App::startedAt('U');
 ```
 
 **Routing:**
@@ -138,7 +141,7 @@ Router::get('/foo/bar/', function () {
 });
 
 //Middleware, you can call Router::next to execute the next function, passing parameters received as arguments
-Router::get('/foo/', function () {
+Router::get('/foo/.*', function () {
 	//...
 	Router::next('bar', 'baz');
 });
@@ -217,6 +220,17 @@ use Costamilam\Alpha\Request;
 //Get the request HTTP method
 Request::method(); //Example: 'GET', 'POST', 'DELETE', ...
 
+//Get the request path, for example: '/', '/foo/', '/foo/123'
+Request::path();
+
+//Get the request token
+Request::token();
+```
+
+> The token must be passed in the `Authorization` header
+
+```php
+
 //Get the request header
 Request::header('foobar');
 ```
@@ -224,8 +238,8 @@ Request::header('foobar');
 > Multiline header returns separated by commas, for example, 'foo, bar, baz'
 
 ```php
-//Get the request path, for example: '/', '/foo/', '/foo/123'
-Request::path();
+//Get the request cookie
+Request::cookie('foobar');
 
 //Get the request parameters
 Request::param();
@@ -237,6 +251,17 @@ Request::param();
 
 //Get fields specific to the request parameters, if the key does not exist, create it with null value
 Request::param('baz', 'bar', 'qux');
+
+//Get the request query string parameters
+Request::queryString();
+//Example
+//[
+//	  'foo' => 'Bar',
+//	  'baz' => 'true'
+//]
+
+//Get fields specific to the request query string parameters, if the key does not exist, create it with null value
+Request::queryString('baz', 'bar', 'qux');
 
 //Get the request body
 Request::body();
@@ -278,12 +303,6 @@ Response::multiHeader(array(
 //Remove a response header
 Response::header('Access-Control-Allow-Headers');
 
-//Change the body of the response using JSON format
-Response::json(array(
-	'foo' => 'bar',
-	'baz' => array(true, false, null, '')
-));
-
 //Pass '0' or 'false' to no cache and an integer in minutes to cache control
 Response::cache(15);
 
@@ -310,17 +329,18 @@ Response::cookie('foo', 'bar');
 
 //Send a cookie with a different expiration (12 hours, default is 24 hours)
 Response::cookie('foo', 'bar', 12 * 60);
+
+//Change the body of the response using JSON format
+Response::json(array(
+	'foo' => 'bar',
+	'baz' => array(true, false, null, '')
+));
+
+//Send a token
+Response::token('MyToken');
 ```
 
-Future implementation:
-
-```php
-//Response with file, pass path to file, name and last parameter determines if force download (not implemented)
-Response::file('path/to/file.txt', 'Name File', true);
-
-//Redirect to another route (not implemented)
-Response::redirect('GET', '/foo/bar/');
-```
+> The Token is passed by the `Token` header
 
 **Database:**
 
@@ -367,92 +387,40 @@ $file = fopen('path/to/file.txt');
 DB::select('INSERT FROM foobar(foo, file) VALUES(?, ?)', $foo, $file);
 ```
 
-**Auth** (with JWT):
+**Authentication** (with JSON Web Token):
 
 ```php
 //Import the necessary classes
-use Costamilam\Alpha\Auth;
+use Costamilam\Alpha\Token;
 
-//For send by HTTP header
-Auth::enableHeaderMode();
-
-//For send by Cookie
-Auth::enableCookieMode();
-```
-
-> On enabling one mode, disable the other
-
-```php
-//Configure the auth module
-Auth::configureToken(
+//Configure the token
+Token::configure(
 	'hs256',                    //Algorithm
 	'mY SuperSECRET.key',       //Secret key
 	'https://example.com',      //Issuer
 	'https://example.com',      //Audience
 	30                          //Time to expires (in minutes)
 );
-```
 
-> If you use cookie mode: The time to expires is used for cookie expiration too, not the default value or set with `Response::configureCookie`
-
-```php
-//Listening status changes
-Auth::onStatus('authorized', function ($tokenPayload) {
-	echo 'User authorized!';
-});
-
-//Listening more than one status changes
-Auth::onStatus(array('empty', 'invalid', 'expired'), function () { /* ... */ });
-```
-
-| Name | Description | Argument | Response status | Finish execution |
-|-|-|-|-|-|
-| `created` | Token successfully created | String of created token | - | No |
-| `empty` | Request don't have a token | - | 401: Unauthorized | Yes |
-| `invalid` | Request has a invalid token | - | 401: Unauthorized | Yes |
-| `expired` | Request has a expired token | Token payload | 401: Unauthorized | Yes |
-| `forbidden` | The token don't have access to the resource | Token payload | 403: Forbidden | Yes |
-| `authorized` | Request has a valid token | Token payload | - | No |
-
-> The 'Response status' column is the default value for the response status of the request and the 'Finish app' column means that the application ends. You can change it by passing a callback function with `Token::onStatus`
-
-```php
-//Create and send a token to the client by configured mode, pass the subject and, optionally, other data
-Auth::setToken(
-	Auth::createToken(
-		17,                                             //For example, the user id
-		array(						//Data to save
-			'name' => 'Foo',			//User name
-			'role' => array('salesman', 'admin')	//User roles, for authenticate
-		)
-	)
+//Create a token, pass the subject and, optionally, other data
+Token::create(
+    17,                                             //For example, the user id
+    array(						//Data to save
+        'name' => 'Foo',			//User name
+        'role' => array('salesman', 'admin')	//User roles, for authenticate
+    )
 );
 
-//Remove the new token send (cancel 'Auth::sendToken')
-Auth::removeToken();
+//Get token payload
+Token::payload($myToken);
 
-//Route auth passing a callback function for validate
-Auth::route('ANY', '/foo/bar/', function ($payload) {
-	$role = $payload['data']['role'];
-
-	if (in_array('admin', $role)) {
-		return true; 	//Authenticated
-	} else {
-		return false; 	//Not authenticated
-	}
-
-	//Simplified:
-	return in_array('admin', $token->getClain('data')['role']);
-});
-
-//For more than one method
-Auth::route(array('GET', 'POST'), '/foo');
-
-//For more than one route
-Auth::route('GET', '(/baz/[a-z]+|/foo/[0-9]+)');
-
-//For all routes and all methods
-Auth::route('ANY', '.*');
+//Token verification, return the error as string or "ok"
+Token::verify($myToken);
 ```
 
-> If the callback is null, it means that any **authenticated** user can access any data
+| Returned value | Is error | Description |
+|-|-|-|
+| Ok | No | Token exists, is valid and is not expired |
+| Empty | Yes | Token does not exist |
+| Invalid | Yes | Token is invalid |
+| Expired | Yes | Token has expired |

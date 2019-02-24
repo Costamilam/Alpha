@@ -404,8 +404,8 @@ Token::configure(
 
 //Create a token, pass the subject and, optionally, other data
 Token::create(
-    17,                                             //For example, the user id
-    array(						//Data to save
+    17,						//For example, the user id
+    array(					//Data to save
         'name' => 'Foo',			//User name
         'role' => array('salesman', 'admin')	//User roles, for authenticate
     )

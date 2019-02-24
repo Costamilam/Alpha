@@ -4,15 +4,19 @@ namespace Costamilam\Alpha;
 
 class Request
 {
-    private static $method;
+    private static $method = '';
 
-    private static $path;
+    private static $path = '';
 
-    private static $param;
+    private static $param = array();
 
-    private static $header;
+    private static $queryString = array();
 
-    private static $body;
+    private static $header = array();
+
+    private static $body = array();
+
+    private static $cookie = array();
 
     public static function load()
     {
@@ -26,42 +30,51 @@ class Request
             self::$path = str_replace('?'.$_SERVER['QUERY_STRING'], '', self::$path);
         }
 
-        self::loadHeader();
+        if (function_exists('apache_request_headers')) {
+            self::$header = apache_request_headers();
+        } else {
+            self::$header = self::loadHeader();
+        }
 
-        self::$param = array();
+        self::$cookie = $_COOKIE;
+
+        self::$queryString = $GET;
 
         if (strpos(self::header('Content-Type'), 'application/json') !== false) {
             self::$body = json_decode(file_get_contents('php://input'), true);
         } else {
-            parse_str(file_get_contents('php://input'), self::$body);
+            self::$body = file_get_contents('php://input');
         }
     }
 
     private static function loadHeader()
     {
-        if (function_exists('apache_request_headers')) {
-            self::$header = apache_request_headers();
-        } else {
-            self::$header = array();
+        $header = array();
 
-            foreach ($_SERVER as $key => $val) {
-                if (preg_match('/\AHTTP_/', $key)) {
-                    $key = preg_replace('/\AHTTP_/', '', $key);
+        foreach ($_SERVER as $key => $val) {
+            if (preg_match('/\AHTTP_/', $key)) {
+                $key = preg_replace('/\AHTTP_/', '', $key);
 
-                    $matches = explode('_', $key);
+                $matches = explode('_', $key);
 
-                    if (count($matches) > 0 && strlen($key) > 2) {
-                        foreach($matches as $index => $value) {
-                            $matches[$index] = ucfirst($value);
-                        }
-
-                        $key = implode('-', $matches);
+                if (count($matches) > 0 && strlen($key) > 2) {
+                    foreach($matches as $index => $value) {
+                        $matches[$index] = ucfirst(strtolower($value));
                     }
 
-                    self::$header[$key] = $val;
+                    $key = implode('-', $matches);
                 }
+
+                $header[$key] = $val;
             }
         }
+
+        return $header;
+    }
+
+    public static function setParam($value)
+    {
+        self::$param = $value;
     }
 
     public static function method()
@@ -69,30 +82,9 @@ class Request
         return self::$method;
     }
 
-    public static function header($name)
+    public static function path()
     {
-        foreach (self::$header as $key => $value) {
-            if (strtolower($key) === strtolower($name)) {
-                return $value;
-            }
-        }
-    }
-
-    public static function cookie($name)
-    {
-        $cookieHeader = self::header('Cookie');
-
-        if ($cookieHeader === null) {
-            return null;
-        }
-
-        foreach (explode('; ', $cookieHeader) as $cookie) {
-            list($key, $value) = explode('=', $cookie);
-
-            if ($key === $name) {
-                return urldecode($value);
-            }
-        }
+        return self::$path;
     }
 
     public static function token()
@@ -108,14 +100,22 @@ class Request
         return $auth;
     }
 
-    public static function path()
+    public static function header($name)
     {
-        return self::$path;
+        foreach (self::$header as $key => $value) {
+            if (strtolower($key) === strtolower($name)) {
+                return $value;
+            }
+        }
     }
 
-    public static function setParam($value)
+    public static function cookie($name)
     {
-        self::$param = $value;
+        foreach (self::$cookie as $key => $value) {
+            if (strtolower($key) === strtolower($name)) {
+                return $value;
+            }
+        }
     }
 
     public static function param(...$index)
@@ -130,9 +130,18 @@ class Request
     public static function body(...$index)
     {
         if (count($index) === 0) {
-            return self::$body ?: array();
+            return self::$body;
         } else {
             return self::getByIndex(self::$body, $index);
+        }
+    }
+
+    public static function queryString(...$index)
+    {
+        if (count($index) === 0) {
+            return self::$queryString;
+        } else {
+            return self::getByIndex(self::$queryString, $index);
         }
     }
 

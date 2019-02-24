@@ -83,13 +83,13 @@ class Token
     public static function verify($token)
     {
         if ($token === null) {
-            return 'empty';
+            return 'Empty';
         }
 
         try {
             $token = (new Parser())->parse($token);
         } catch (\Exception $exception) {
-            return 'invalid';
+            return 'Invalid';
         }
 
         $validator = new ValidationData();
@@ -100,13 +100,13 @@ class Token
 
         if (!$token->validate($validator)) {
             if ($token->isExpired()) {
-                return 'expired';
+                return 'Expired';
             } else {
-                return 'invalid';
+                return 'Invalid';
             }
         }
 
-        return 'ok';
+        return 'Ok';
     }
 
     public static function payload($token)

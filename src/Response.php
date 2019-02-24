@@ -60,20 +60,20 @@ class Response
         if ($minutes === false || $minutes === 0) {
             self::multiHeader(array(
                 'Pragma'=> 'no-cache',
-                'Expires' => gmdate('D, d M Y H:i:s').' GMT',
+                'Expires' => gmdate('D, d M Y H:i:s', App::startedAt('U')).' GMT',
                 'Vary' => '*',
                 'Cache-Control' => 'private, no-store, no-cache, must-revalidate, max-age=0, s-maxage=0'
             ))
             ::header('Cache-Control', 'post-check=0, pre-check=0', false);
         } else {
             self::multiHeader(array(
-                'Expires' => gmdate('D, d M Y H:i:s', App::startedAt() + $minutes * 60) . ' GMT',
+                'Expires' => gmdate('D, d M Y H:i:s', App::startedAt('U') + $minutes * 60) . ' GMT',
                 'Cache-Control' => 'public, max-age='.($minutes * 60),
                 'Pragma' => 'max-age='.($minutes * 60)
             ));
         }
 
-        self::header('Last-Modified', gmdate('D, d M Y H:i:s', $lastModified !== 'now' ? $lastModified : App::startedAt()).' GMT');
+        self::header('Last-Modified', gmdate('D, d M Y H:i:s', $lastModified !== 'now' ? $lastModified : App::startedAt('U')).' GMT');
 
         return __CLASS__;
     }
@@ -101,11 +101,7 @@ class Response
 
     public static function token($token)
     {
-        if ($token === null) {
-            self::header('Token');
-        } else {
-            self::header('Token', $token);
-        }
+        self::header('Token', $token);
     }
 
     public static function dispatch()
